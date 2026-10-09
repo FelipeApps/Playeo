@@ -34,7 +34,20 @@
       "expo-image",
       "@react-native-community/datetimepicker",
       "expo-notifications",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-location",
+        {
+          "locationWhenInUseUsageDescription": "Planeo usa tu ubicación solo cuando pulsas avisar en la pantalla de emergencia, para incluirla en el mensaje a tu contacto de confianza."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Planeo usa el micrófono solo mientras grabas una nota de voz para enviarla en un chat."
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

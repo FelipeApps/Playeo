@@ -17,7 +17,10 @@ function redactar(tipo: string, actor: string, datos: Record<string, string | nu
   const destino = datos.titulo ?? '';
   switch (tipo) {
     case 'solicitud_amistad':
-      return { title: 'Nueva solicitud de amistad', body: `${actor} quiere ser tu amigo en Planeo.` };
+      return {
+        title: 'Nueva solicitud de amistad',
+        body: `${actor} quiere ser tu amigo en Planeo.`,
+      };
     case 'amistad_aceptada':
       return { title: 'Solicitud aceptada', body: `${actor} y tú ya sois amigos.` };
     case 'invitacion_grupo':
@@ -41,11 +44,16 @@ Deno.serve(async (peticion) => {
   }
 
   const { notificacion_id } = await peticion.json().catch(() => ({}));
-  if (typeof notificacion_id !== 'number') return responder(400, { error: 'Falta notificacion_id' });
+  if (typeof notificacion_id !== 'number')
+    return responder(400, { error: 'Falta notificacion_id' });
 
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
-    auth: { persistSession: false },
-  });
+  const admin = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    {
+      auth: { persistSession: false },
+    },
+  );
 
   const { data: notificacion } = await admin
     .from('notificaciones')
@@ -61,7 +69,11 @@ Deno.serve(async (peticion) => {
   ]);
   if (!tokens || tokens.length === 0) return responder(200, { enviadas: 0 });
 
-  const texto = redactar(notificacion.tipo, actor?.nombre_visible ?? 'Alguien', notificacion.datos ?? {});
+  const texto = redactar(
+    notificacion.tipo,
+    actor?.nombre_visible ?? 'Alguien',
+    notificacion.datos ?? {},
+  );
   const mensajes = tokens.map(({ token }) => ({
     to: token,
     sound: 'default',

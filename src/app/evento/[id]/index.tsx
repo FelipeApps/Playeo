@@ -13,6 +13,7 @@ import { EstadoVacio } from '@/components/estado-vacio';
 import { FilaUsuario } from '@/components/fila-usuario';
 import { FotoPlaya } from '@/components/foto-playa';
 import { Icono } from '@/components/icono';
+import { IlustracionActividad } from '@/components/ilustracion-actividad';
 import { CIELO_ALTO } from '@/components/ilustracion-playa';
 import { PantallaFormulario } from '@/components/pantalla-formulario';
 import { useBarraEstado } from '@/components/pantalla';
@@ -121,9 +122,14 @@ export default function PantallaEvento() {
           {playa ? (
             <FotoPlaya playa={playa} proporcion={1.3} style={StyleSheet.absoluteFill} />
           ) : (
-            // Sin foto del lugar: el icono de la actividad sobre el cielo.
-            <View style={[StyleSheet.absoluteFill, estilos.sinFoto]}>
-              <Icono nombre={actividad.icono} tamano={120} color="rgba(255,255,255,0.22)" />
+            // Sin foto del lugar: la estampa de la actividad. Las canchas van atenuadas, para
+            // que sus líneas queden de fondo y no compitan con el título.
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                evento.tipo_sitio === 'catalogo' && estilos.estampaTenue,
+              ]}>
+              <IlustracionActividad actividad={evento.actividad_id} proporcion={1.3} />
             </View>
           )}
           <LinearGradient
@@ -368,7 +374,7 @@ export default function PantallaEvento() {
 const estilos = StyleSheet.create({
   pantalla: { flex: 1 },
   foto: { height: ALTO_FOTO, justifyContent: 'flex-end', backgroundColor: CIELO_ALTO },
-  sinFoto: { alignItems: 'flex-end', justifyContent: 'center', paddingRight: espacio.l },
+  estampaTenue: { opacity: 0.45 },
   sobreFoto: { padding: espacio.m, paddingBottom: espacio.l, gap: espacio.xxs },
   sello: {
     flexDirection: 'row',

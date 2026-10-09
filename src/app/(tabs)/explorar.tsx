@@ -10,7 +10,7 @@ import { CabeceraCielo } from '@/components/cabecera-cielo';
 import { CampoTexto } from '@/components/campo-texto';
 import { Esqueleto } from '@/components/esqueleto';
 import { EstadoVacio } from '@/components/estado-vacio';
-import { Icono } from '@/components/icono';
+import { IlustracionActividad } from '@/components/ilustracion-actividad';
 import { MapaLugares, type PuntoMapa } from '@/components/mapa-lugares';
 import { ALTO_PESTANAS, useBarraEstado } from '@/components/pantalla';
 import { Presionable } from '@/components/presionable';
@@ -21,6 +21,7 @@ import { Texto } from '@/components/texto';
 import { ACTIVIDADES_CON_CATALOGO, buscarActividad, type IdActividad } from '@/data/actividades';
 import { lugarDe } from '@/data/playas';
 import { useRanking } from '@/hooks/use-ranking';
+import { usePreferencias } from '@/preferencias/contexto';
 import { useRegion } from '@/region/contexto';
 import {
   descripcionDe,
@@ -144,6 +145,9 @@ function ExplorarRutas({ vista, region, clave }: { vista: Vista; region: string;
             sombra(esOscuro),
             { backgroundColor: colores.superficie, borderColor: colores.borde },
           ]}>
+          <View style={estilos.estampa}>
+            <IlustracionActividad actividad="senderismo" proporcion={64 / 88} />
+          </View>
           <View style={estilos.textos}>
             <Texto variante="subtitulo" numberOfLines={2}>
               {ruta.nombre}
@@ -180,7 +184,6 @@ function ExplorarCanchas({
   const [texto, setTexto] = useState('');
   const lugares = useLugares(actividad, region);
   const filtradas = filtrar(lugares.data ?? [], texto);
-  const icono = buscarActividad(actividad).icono;
 
   if (lugares.isPending) return <Esqueleto alto={72} redondeo={radio.l} />;
   if (lugares.isError) return <SinCatalogo alReintentar={() => lugares.refetch()} />;
@@ -226,8 +229,8 @@ function ExplorarCanchas({
             estilos.fila,
             { backgroundColor: colores.superficie, borderColor: colores.borde },
           ]}>
-          <View style={[estilos.medallon, { backgroundColor: colores.arena }]}>
-            <Icono nombre={icono} tamano={22} color={colores.sobreArena} />
+          <View style={estilos.miniatura}>
+            <IlustracionActividad actividad={actividad} proporcion={1} />
           </View>
           <View style={estilos.textos}>
             <Texto variante="cuerpoFuerte" numberOfLines={1}>
@@ -273,7 +276,10 @@ export default function PantallaExplorar() {
   const insets = useSafeAreaInsets();
   const { zona } = useRegion();
   const parametros = useLocalSearchParams<{ actividad?: IdActividad }>();
-  const [actividad, setActividad] = useState<IdActividad>(parametros.actividad ?? 'playa');
+  const { preferencias } = usePreferencias();
+  const [actividad, setActividad] = useState<IdActividad>(
+    parametros.actividad ?? (preferencias.interes === 'senderismo' ? 'senderismo' : 'playa'),
+  );
   const [vista, setVista] = useState<Vista>('lista');
   useBarraEstado('clara');
 
@@ -340,7 +346,7 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: espacio.s,
-    padding: espacio.m,
+    padding: espacio.s,
     borderRadius: radio.l,
     borderWidth: StyleSheet.hairlineWidth,
   },
@@ -352,13 +358,13 @@ const estilos = StyleSheet.create({
     borderRadius: radio.l,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  medallon: {
-    width: 44,
-    height: 44,
-    borderRadius: radio.completo,
-    alignItems: 'center',
-    justifyContent: 'center',
+  estampa: {
+    width: 64,
+    height: 88,
+    borderRadius: radio.m,
+    overflow: 'hidden',
   },
+  miniatura: { width: 56, height: 56, borderRadius: radio.m, overflow: 'hidden' },
   textos: { flex: 1, gap: 2 },
   creditos: { textAlign: 'center', paddingTop: espacio.xs },
 });

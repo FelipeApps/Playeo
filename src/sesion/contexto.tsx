@@ -3,9 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, use, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { supabase, supabaseConfigurado, type CambiosPerfil, type Perfil } from '@/lib/supabase';
-import { usePreferencias } from '@/preferencias/contexto';
+import { usePreferencias, type PreferenciasApp } from '@/preferencias/contexto';
 import { useRegion } from '@/region/contexto';
-import { PREFERENCIAS_POR_DEFECTO, type Preferencias } from '@/scoring/puntuacion';
+import { PREFERENCIAS_POR_DEFECTO } from '@/scoring/puntuacion';
 
 interface Valor {
   sesion: Session | null;
@@ -87,8 +87,9 @@ export function useActualizarPerfil() {
   });
 }
 
-function sonIguales(a: Preferencias, b: Preferencias) {
+function sonIguales(a: PreferenciasApp, b: PreferenciasApp) {
   return (
+    a.interes === b.interes &&
     a.plan === b.plan &&
     a.toleranciaViento === b.toleranciaViento &&
     a.sensibleCalima === b.sensibleCalima
@@ -110,7 +111,7 @@ function SincronizarPerfil({ idUsuario }: { idUsuario: string | undefined }) {
 
   useEffect(() => {
     if (!idUsuario || !perfil || perfil.id !== idUsuario) return;
-    const guardadas = perfil.preferencias_playa as Partial<Preferencias>;
+    const guardadas = perfil.preferencias_playa as Partial<PreferenciasApp>;
 
     if (adoptadasDe.current !== idUsuario) {
       adoptadasDe.current = idUsuario;

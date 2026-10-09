@@ -1,7 +1,13 @@
 import Feather from '@expo/vector-icons/Feather';
+import {
+  useAudioPlayer,
+  useAudioPlayerStatus,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,7 +21,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ROJO_EMERGENCIA } from '@/components/boton-emergencia';
 import { CIELO_ALTO } from '@/components/ilustracion-playa';
+import { NotaVoz } from '@/components/nota-voz';
 import { useBarraEstado } from '@/components/pantalla';
 import { Presionable } from '@/components/presionable';
 import { Texto } from '@/components/texto';
@@ -30,6 +38,15 @@ import {
   useParticipantes,
   type Mensaje,
 } from '@/social/chat';
+import {
+  AJUSTES_GRABACION,
+  duracionCorta,
+  MILISEGUNDOS_MINIMOS,
+  prepararEscucha,
+  prepararMicrofono,
+  SEGUNDOS_MAXIMOS,
+  urlDeNota,
+} from '@/social/voz';
 import { espacio, fuentes, radio, useTema } from '@/theme';
 
 const LARGO_MAXIMO = 2000;
@@ -47,7 +64,17 @@ export default function PantallaChat() {
   const mensajes = useMensajes(id);
   const participantes = useParticipantes(id);
   const { escribiendo, avisarEscribiendo } = useChatEnVivo(id);
-  const { enviar, borrar, marcarLeida } = useAccionesChat(id);
+  const { enviar, enviarVoz, borrar, marcarLeida } = useAccionesChat(id);
+
+  // Notas de voz. Un solo reproductor para toda la conversación: suena una cada vez.
+  const reproductor = useAudioPlayer();
+  const audio = useAudioPlayerStatus(reproductor);
+  const [notaActiva, setNotaActiva] = useState<number>();
+  const [notaCargando, setNotaCargando] = useState<number>();
+  const grabadora = useAudioRecorder(AJUSTES_GRABACION);
+  const grabacion = useAudioRecorderState(grabadora, 250);
+  const [grabando, setGrabando] = useState(false);
+  const inicioGrabacion = useRef(0);
 
   const chat = conversaciones.data?.find((candidato) => candidato.id === id);
   const titulo = chat?.titulo ?? tituloInicial ?? 'Chat';
@@ -84,10 +111,79 @@ export default function PantallaChat() {
     });
   };
 
+  const empezarAGrabar = async () => {
+    if (grabando || enviarVoz.isPending) return;
+    try {
+      if (!(await prepararMicrofono())) {
+        Alert.alert(
+          'Sin acceso al micrófono',
+          'Para enviar notas de voz, permite el micrófono a Planeo en los ajustes del móvil.',
+        );
+        return;
+      }
+      reproductor.pause();
+      await grabadora.prepareToRecordAsync();
+      // Al llegar al máximo la grabación se detiene sola y queda lista para enviar.
+      grabadora.record({ forDuration: SEGUNDOS_MAXIMOS });
+      inicioGrabacion.current = Date.now();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setGrabando(true);
+    } catch {
+      Alert.alert('No se pudo grabar', 'Inténtalo de nuevo.');
+    }
+  };
+
+  const terminarDeGrabar = async (enviarla: boolean) => {
+    const duracionMs = Math.min(Date.now() - inicioGrabacion.current, SEGUNDOS_MAXIMOS * 1000);
+    setGrabando(false);
+    try {
+      await grabadora.stop();
+    } catch {
+      // Ya se había detenido sola al llegar al máximo.
+    }
+    await prepararEscucha().catch(() => {});
+    const uri = grabadora.uri;
+    if (!enviarla || !uri || duracionMs < MILISEGUNDOS_MINIMOS) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    enviarVoz.mutate(
+      { uri, duracionMs },
+      { onError: (fallo) => Alert.alert('No se pudo enviar', mensajeDeError(fallo)) },
+    );
+  };
+
+  const alternarNota = async (mensaje: Mensaje) => {
+    if (!mensaje.audio_ruta || grabando) return;
+    if (notaActiva === mensaje.id) {
+      if (audio.playing) {
+        reproductor.pause();
+        return;
+      }
+      // Si ya había terminado, vuelve a empezar.
+      if (audio.duration > 0 && audio.currentTime >= audio.duration - 0.1) {
+        await reproductor.seekTo(0);
+      }
+      reproductor.play();
+      return;
+    }
+    setNotaCargando(mensaje.id);
+    try {
+      const url = await urlDeNota(mensaje.audio_ruta);
+      await prepararEscucha();
+      reproductor.replace({ uri: url });
+      reproductor.play();
+      setNotaActiva(mensaje.id);
+    } catch {
+      Alert.alert('No se pudo reproducir', 'Comprueba la conexión e inténtalo de nuevo.');
+    } finally {
+      setNotaCargando(undefined);
+    }
+  };
+
   const opcionesDe = (mensaje: Mensaje) => {
     if (mensaje.autor_id === yo) {
-      Alert.alert('Tu mensaje', mensaje.cuerpo, [
-        { text: 'Borrar', style: 'destructive', onPress: () => borrar.mutate(mensaje.id) },
+      Alert.alert(mensaje.audio_ruta ? 'Tu nota de voz' : 'Tu mensaje', mensaje.cuerpo, [
+        { text: 'Borrar', style: 'destructive', onPress: () => borrar.mutate(mensaje) },
         { text: 'Cancelar', style: 'cancel' },
       ]);
       return;
@@ -142,9 +238,28 @@ export default function PantallaChat() {
                   borderBottomLeftRadius: 6,
                 },
           ]}>
-          <Text style={[estilos.cuerpo, { color: mio ? colores.sobrePrimario : colores.texto }]}>
-            {item.cuerpo}
-          </Text>
+          {item.audio_ruta ? (
+            <NotaVoz
+              duracionMs={item.audio_duracion_ms ?? 0}
+              progreso={
+                notaActiva === item.id && audio.duration > 0
+                  ? audio.currentTime / audio.duration
+                  : 0
+              }
+              sonando={notaActiva === item.id && audio.playing}
+              cargando={notaCargando === item.id}
+              mio={mio}
+              onPress={() => alternarNota(item)}
+              onLongPress={() => {
+                Haptics.selectionAsync();
+                opcionesDe(item);
+              }}
+            />
+          ) : (
+            <Text style={[estilos.cuerpo, { color: mio ? colores.sobrePrimario : colores.texto }]}>
+              {item.cuerpo}
+            </Text>
+          )}
           <Text
             style={[
               estilos.hora,
@@ -233,34 +348,94 @@ export default function PantallaChat() {
             borderTopColor: colores.borde,
           },
         ]}>
-        <TextInput
-          accessibilityLabel="Escribe un mensaje"
-          placeholder="Escribe un mensaje"
-          placeholderTextColor={colores.textoSecundario}
-          selectionColor={colores.primario}
-          value={texto}
-          onChangeText={(nuevo) => {
-            setTexto(nuevo);
-            if (nuevo.length > 0) avisarEscribiendo();
-          }}
-          maxLength={LARGO_MAXIMO}
-          multiline
-          style={[
-            estilos.caja,
-            { color: colores.texto, backgroundColor: colores.fondo, borderColor: colores.borde },
-          ]}
-        />
-        <Presionable
-          accessibilityLabel="Enviar"
-          accessibilityState={{ disabled: texto.trim().length === 0 }}
-          disabled={texto.trim().length === 0}
-          onPress={mandar}
-          style={[
-            estilos.enviar,
-            { backgroundColor: colores.primario, opacity: texto.trim().length === 0 ? 0.4 : 1 },
-          ]}>
-          <Feather name="send" size={20} color={colores.sobrePrimario} />
-        </Presionable>
+        {grabando ? (
+          <>
+            <Presionable
+              accessibilityLabel="Descartar la nota de voz"
+              onPress={() => terminarDeGrabar(false)}
+              style={[estilos.enviar, { backgroundColor: colores.fondo }]}>
+              <Feather name="trash-2" size={20} color={colores.error} />
+            </Presionable>
+            <View
+              accessibilityLiveRegion="polite"
+              style={[
+                estilos.grabando,
+                { backgroundColor: colores.fondo, borderColor: colores.borde },
+              ]}>
+              <View style={estilos.piloto} />
+              <Text style={[estilos.cronometro, { color: colores.texto }]}>
+                {duracionCorta(grabacion.durationMillis)}
+              </Text>
+              <Texto
+                variante="detalle"
+                color="textoSecundario"
+                numberOfLines={1}
+                style={estilos.flexible}>
+                {grabacion.isRecording ? 'Grabando…' : 'Lista para enviar'}
+              </Texto>
+            </View>
+            <Presionable
+              accessibilityLabel="Enviar la nota de voz"
+              onPress={() => terminarDeGrabar(true)}
+              style={[estilos.enviar, { backgroundColor: colores.primario }]}>
+              <Feather name="send" size={20} color={colores.sobrePrimario} />
+            </Presionable>
+          </>
+        ) : (
+          <>
+            <TextInput
+              accessibilityLabel="Escribe un mensaje"
+              placeholder="Escribe un mensaje"
+              placeholderTextColor={colores.textoSecundario}
+              selectionColor={colores.primario}
+              value={texto}
+              onChangeText={(nuevo) => {
+                setTexto(nuevo);
+                if (nuevo.length > 0) avisarEscribiendo();
+              }}
+              maxLength={LARGO_MAXIMO}
+              multiline
+              style={[
+                estilos.caja,
+                {
+                  color: colores.texto,
+                  backgroundColor: colores.fondo,
+                  borderColor: colores.borde,
+                },
+              ]}
+            />
+            {texto.trim().length === 0 ? (
+              // Con la caja vacía, el botón graba en vez de enviar.
+              <Presionable
+                accessibilityLabel="Grabar una nota de voz"
+                accessibilityState={{ busy: enviarVoz.isPending }}
+                disabled={enviarVoz.isPending}
+                onPress={empezarAGrabar}
+                style={[estilos.enviar, { backgroundColor: colores.primario }]}>
+                {enviarVoz.isPending ? (
+                  <ActivityIndicator color={colores.sobrePrimario} />
+                ) : (
+                  <Feather name="mic" size={20} color={colores.sobrePrimario} />
+                )}
+              </Presionable>
+            ) : (
+              <Presionable
+                accessibilityLabel="Enviar"
+                accessibilityState={{ disabled: texto.trim().length === 0 }}
+                disabled={texto.trim().length === 0}
+                onPress={mandar}
+                style={[
+                  estilos.enviar,
+                  {
+                    backgroundColor: colores.primario,
+                    opacity: texto.trim().length === 0 ? 0.4 : 1,
+                  },
+                ]}>
+                <Feather name="send" size={20} color={colores.sobrePrimario} />
+              </Presionable>
+            )}
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -331,6 +506,19 @@ const estilos = StyleSheet.create({
     fontFamily: fuentes.texto,
     fontSize: 16,
   },
+  grabando: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espacio.xs,
+    minHeight: 48,
+    paddingHorizontal: espacio.m,
+    borderRadius: radio.l,
+    borderWidth: 1,
+  },
+  piloto: { width: 10, height: 10, borderRadius: 5, backgroundColor: ROJO_EMERGENCIA },
+  cronometro: { fontFamily: fuentes.textoFuerte, fontSize: 16, fontVariant: ['tabular-nums'] },
+  flexible: { flex: 1 },
   enviar: {
     width: 48,
     height: 48,

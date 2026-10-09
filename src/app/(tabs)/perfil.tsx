@@ -11,6 +11,7 @@ import { CabeceraCielo } from '@/components/cabecera-cielo';
 import { Esqueleto } from '@/components/esqueleto';
 import { ALTO_PESTANAS, useBarraEstado } from '@/components/pantalla';
 import { Seccion } from '@/components/seccion';
+import { useContactoConfianza } from '@/seguridad/contacto';
 import { SeccionPreferencias } from '@/components/seccion-preferencias';
 import { Segmentado } from '@/components/segmentado';
 import { Texto } from '@/components/texto';
@@ -155,6 +156,28 @@ function SeccionGrupos() {
 }
 
 /** Zona de costa elegida, con acceso al selector. */
+/** Contacto al que se avisa desde el botón SOS. Vive en el móvil, no en la cuenta. */
+function SeccionSeguridad() {
+  const { contacto } = useContactoConfianza();
+
+  return (
+    <Seccion
+      titulo="Seguridad"
+      descripcion="El botón SOS llama al 112 o avisa a tu contacto con tu ubicación.">
+      <Texto>
+        {contacto
+          ? `Tu contacto de confianza es ${contacto.nombre}.`
+          : 'Aún no has elegido un contacto de confianza.'}
+      </Texto>
+      <Boton
+        titulo={contacto ? 'Cambiar contacto' : 'Añadir contacto de confianza'}
+        variante="secundario"
+        onPress={() => router.push('/contacto-confianza')}
+      />
+    </Seccion>
+  );
+}
+
 function SeccionZona() {
   const { zona } = useRegion();
 
@@ -318,6 +341,7 @@ function ConSesion() {
       <SeccionGrupos />
       <SeccionZona />
       <SeccionPreferencias />
+      <SeccionSeguridad />
 
       <Seccion titulo="Privacidad">
         <Segmentado

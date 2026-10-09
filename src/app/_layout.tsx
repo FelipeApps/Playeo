@@ -127,6 +127,7 @@ export default function LayoutRaiz() {
                     contentStyle: { backgroundColor: colores.fondo },
                   }}>
                   <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="bienvenida" />
                   <Stack.Screen name="zona" />
                   <Stack.Screen name="playa/[id]" />
                   <Stack.Screen name="lugar/[id]" />
@@ -152,6 +153,8 @@ export default function LayoutRaiz() {
                   <Stack.Screen name="cuenta/edad" />
                   <Stack.Screen name="evento/[id]/editar" />
                   <Stack.Screen name="moderacion" />
+                  <Stack.Screen name="emergencia" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="contacto-confianza" />
                 </Stack>
               </ThemeProvider>
             </ProveedorSesion>

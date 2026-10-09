@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { StyleSheet } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
@@ -61,6 +62,10 @@ export function IlustracionPlaya({ tipo, proporcion }: Props) {
   const y = 120 - altoVista;
   // En panorámica el sol baja hasta el horizonte para no quedar fuera del encuadre.
   const solY = panoramica ? 60 : 36;
+  // Ids únicos por estampa: varias en pantalla no deben compartir el mismo degradado.
+  const sufijo = useId().replace(/:/g, '');
+  const idCielo = `cielo-${sufijo}`;
+  const idMar = `mar-${sufijo}`;
 
   return (
     <Svg
@@ -73,19 +78,19 @@ export function IlustracionPlaya({ tipo, proporcion }: Props) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants">
       <Defs>
-        <LinearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={idCielo} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={CIELO_ALTO} />
           <Stop offset="1" stopColor="#9BD8E6" />
         </LinearGradient>
-        <LinearGradient id="mar" x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={idMar} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#0E6F9E" />
           <Stop offset="1" stopColor="#3DBFC4" />
         </LinearGradient>
       </Defs>
-      <Rect width={120} height={120} fill="url(#cielo)" />
+      <Rect width={120} height={120} fill={`url(#${idCielo})`} />
       <Circle cx={88} cy={solY} r={22} fill="#FFD23F" opacity={0.2} />
       <Circle cx={88} cy={solY} r={12} fill="#FFD23F" />
-      <Rect y={60} width={120} height={60} fill="url(#mar)" />
+      <Rect y={60} width={120} height={60} fill={`url(#${idMar})`} />
       <Path d="M0 68 H46" stroke="#FFFFFF" strokeWidth={1.2} opacity={0.35} strokeLinecap="round" />
       <Path
         d="M62 74 H120"

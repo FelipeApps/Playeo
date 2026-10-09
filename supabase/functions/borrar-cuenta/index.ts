@@ -33,6 +33,16 @@ Deno.serve(async (peticion) => {
     await admin.storage.from('avatares').remove(fotos.map((foto) => `${usuario.id}/${foto.name}`));
   }
 
+  // Notas de voz: una carpeta por conversación dentro de la del usuario.
+  const { data: carpetas } = await admin.storage.from('notas-voz').list(usuario.id);
+  for (const carpeta of carpetas ?? []) {
+    const base = `${usuario.id}/${carpeta.name}`;
+    const { data: notas } = await admin.storage.from('notas-voz').list(base, { limit: 1000 });
+    if (notas && notas.length > 0) {
+      await admin.storage.from('notas-voz').remove(notas.map((nota) => `${base}/${nota.name}`));
+    }
+  }
+
   const { error } = await admin.auth.admin.deleteUser(usuario.id);
   if (error) return responder(500, { error: 'No se pudo borrar la cuenta' });
 

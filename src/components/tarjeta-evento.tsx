@@ -3,11 +3,10 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { FotoPlaya } from '@/components/foto-playa';
-import { Icono } from '@/components/icono';
+import { IlustracionActividad } from '@/components/ilustracion-actividad';
 import { CIELO_ALTO } from '@/components/ilustracion-playa';
 import { Presionable } from '@/components/presionable';
 import { Texto } from '@/components/texto';
-import { buscarActividad } from '@/data/actividades';
 import { buscarPlaya } from '@/data/playas';
 import { cuando, etiquetaRespuesta, type Respuesta } from '@/social/eventos';
 import { espacio, radio, sombra, useTema } from '@/theme';
@@ -63,8 +62,8 @@ export function TarjetaEvento({ evento }: { evento: EventoResumido }) {
       {playa ? (
         <FotoPlaya playa={playa} tamano="miniatura" proporcion={0.8} style={estilos.foto} />
       ) : (
-        <View style={[estilos.foto, estilos.sinFoto, { backgroundColor: CIELO_ALTO }]}>
-          <Icono nombre={buscarActividad(evento.actividad_id).icono} tamano={40} color="#FFFFFF" />
+        <View style={[estilos.foto, { backgroundColor: CIELO_ALTO }]}>
+          <IlustracionActividad actividad={evento.actividad_id} proporcion={0.8} />
         </View>
       )}
       <View style={estilos.textos}>
@@ -108,7 +107,6 @@ const estilos = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   foto: { width: 88, minHeight: 110, borderRadius: radio.m, overflow: 'hidden' },
-  sinFoto: { alignItems: 'center', justifyContent: 'center' },
   textos: { flex: 1, gap: 2, justifyContent: 'center' },
   pie: {
     flexDirection: 'row',

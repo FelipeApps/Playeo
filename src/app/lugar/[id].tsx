@@ -7,6 +7,7 @@ import { Boton } from '@/components/boton';
 import { Esqueleto } from '@/components/esqueleto';
 import { EstadoVacio } from '@/components/estado-vacio';
 import { Icono } from '@/components/icono';
+import { IlustracionActividad } from '@/components/ilustracion-actividad';
 import { Medida } from '@/components/medida';
 import { PantallaFormulario } from '@/components/pantalla-formulario';
 import { PrevisionHoras } from '@/components/prevision-horas';
@@ -168,6 +169,9 @@ export default function PantallaLugar() {
 
   return (
     <PantallaFormulario titulo={lugar.nombre} subtitulo={descripcionDe(lugar) || actividad.nombre}>
+      <View style={estilos.banda}>
+        <IlustracionActividad actividad={actividad.id} proporcion={2.4} />
+      </View>
       <View style={[estilos.sello, { backgroundColor: colores.arena }]}>
         <Icono nombre={actividad.icono} tamano={18} color={colores.sobreArena} />
         <Texto variante="etiqueta" color="sobreArena">
@@ -255,6 +259,7 @@ export default function PantallaLugar() {
 }
 
 const estilos = StyleSheet.create({
+  banda: { height: 140, borderRadius: radio.l, overflow: 'hidden' },
   sello: {
     flexDirection: 'row',
     alignItems: 'center',

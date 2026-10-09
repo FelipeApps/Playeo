@@ -4,9 +4,15 @@ import { StyleSheet, Switch, View } from 'react-native';
 import { Seccion } from '@/components/seccion';
 import { Segmentado } from '@/components/segmentado';
 import { Texto } from '@/components/texto';
-import { usePreferencias } from '@/preferencias/contexto';
+import { usePreferencias, type Interes } from '@/preferencias/contexto';
 import type { Plan, ToleranciaViento } from '@/scoring/puntuacion';
 import { espacio, useTema } from '@/theme';
+
+const INTERESES: { valor: Interes; etiqueta: string }[] = [
+  { valor: 'playa', etiqueta: 'Playa' },
+  { valor: 'senderismo', etiqueta: 'Senderismo' },
+  { valor: 'todo', etiqueta: 'Todo' },
+];
 
 const PLANES: { valor: Plan; etiqueta: string }[] = [
   { valor: 'bano', etiqueta: 'Baño' },
@@ -33,9 +39,24 @@ export function SeccionPreferencias() {
   const { preferencias, cambiar } = usePreferencias();
 
   return (
-    <Seccion titulo="Tu playa ideal" descripcion="Con esto se calcula la puntuación de cada playa.">
+    <Seccion
+      titulo="Tus preferencias"
+      descripcion="Qué te enseñamos primero y cómo se puntúa cada sitio.">
       <View style={estilos.ajuste}>
-        <Texto variante="cuerpoFuerte">Qué plan buscas</Texto>
+        <Texto variante="cuerpoFuerte">Qué te interesa</Texto>
+        <Segmentado
+          etiqueta="Qué te interesa"
+          opciones={INTERESES}
+          valor={preferencias.interes ?? 'todo'}
+          alCambiar={(interes) => cambiar({ interes })}
+        />
+        <Texto variante="detalle" color="textoSecundario">
+          Decide por dónde empieza Explorar y qué se destaca en Inicio.
+        </Texto>
+      </View>
+
+      <View style={estilos.ajuste}>
+        <Texto variante="cuerpoFuerte">Qué plan de playa buscas</Texto>
         <Segmentado
           etiqueta="Qué plan buscas"
           opciones={PLANES}

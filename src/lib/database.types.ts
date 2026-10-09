@@ -285,14 +285,14 @@ isOneToOne: false
                   ]
                 },"mensajes": {
                   Row: {
-                    "autor_id": string,"conversacion_id": string,"creado": string,"cuerpo": string,"id": number
+                    "audio_duracion_ms": number | null,"audio_ruta": string | null,"autor_id": string,"conversacion_id": string,"creado": string,"cuerpo": string,"id": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "autor_id": string,"conversacion_id": string,"creado"?: string,"cuerpo": string,"id"?: never
+                    "audio_duracion_ms"?: number | null,"audio_ruta"?: string | null,"autor_id": string,"conversacion_id": string,"creado"?: string,"cuerpo": string,"id"?: never
                   }
                   Update: {
-                    "autor_id"?: string,"conversacion_id"?: string,"creado"?: string,"cuerpo"?: string,"id"?: never
+                    "audio_duracion_ms"?: number | null,"audio_ruta"?: string | null,"autor_id"?: string,"conversacion_id"?: string,"creado"?: string,"cuerpo"?: string,"id"?: never
                   }
                   Relationships: [
                     {

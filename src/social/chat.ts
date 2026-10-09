@@ -9,13 +9,19 @@ import { useEffect, useRef, useState } from 'react';
 
 import { supabase } from '@/lib/supabase';
 import { useMiPerfil, useSesion } from '@/sesion/contexto';
+import { borrarNota, subirNota } from '@/social/voz';
 
 export interface Mensaje {
   id: number;
   autor_id: string;
   cuerpo: string;
   creado: string;
+  /** Solo en las notas de voz: dónde está el audio y cuánto dura. */
+  audio_ruta: string | null;
+  audio_duracion_ms: number | null;
 }
+
+const COLUMNAS = 'id, autor_id, cuerpo, creado, audio_ruta, audio_duracion_ms';
 
 const MENSAJES_POR_PAGINA = 30;
 /** Cada cuánto se avisa de que sigo escribiendo, como mucho. */
@@ -77,7 +83,7 @@ export function useMensajes(conversacion: string) {
     queryFn: async ({ pageParam }): Promise<Mensaje[]> => {
       let consulta = supabase
         .from('mensajes')
-        .select('id, autor_id, cuerpo, creado')
+        .select(COLUMNAS)
         .eq('conversacion_id', conversacion)
         .order('id', { ascending: false })
         .limit(MENSAJES_POR_PAGINA);
@@ -237,7 +243,7 @@ export function useAccionesChat(conversacion: string) {
       const { data, error } = await supabase
         .from('mensajes')
         .insert({ conversacion_id: conversacion, autor_id: yo, cuerpo })
-        .select('id, autor_id, cuerpo, creado')
+        .select(COLUMNAS)
         .single();
       if (error) throw error;
       return data;
@@ -249,10 +255,40 @@ export function useAccionesChat(conversacion: string) {
     },
   });
 
+  /** Sube la grabación y envía el mensaje que la lleva. */
+  const enviarVoz = useMutation({
+    mutationFn: async (nota: { uri: string; duracionMs: number }): Promise<Mensaje> => {
+      const ruta = await subirNota(yo, conversacion, nota.uri);
+      const { data, error } = await supabase
+        .from('mensajes')
+        .insert({
+          conversacion_id: conversacion,
+          autor_id: yo,
+          // El servidor pone el texto definitivo de las notas de voz.
+          cuerpo: 'Nota de voz',
+          audio_ruta: ruta,
+          audio_duracion_ms: Math.round(nota.duracionMs),
+        })
+        .select(COLUMNAS)
+        .single();
+      if (error) {
+        // Sin mensaje, el archivo no sirve de nada: no se deja huérfano.
+        await borrarNota(ruta);
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: (mensaje) => {
+      agregarMensaje(consultas, conversacion, mensaje);
+      consultas.invalidateQueries({ queryKey: ['social', 'conversaciones'] });
+    },
+  });
+
   const borrar = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async ({ id, audio_ruta }: Pick<Mensaje, 'id' | 'audio_ruta'>) => {
       const { error } = await supabase.from('mensajes').delete().eq('id', id);
       if (error) throw error;
+      if (audio_ruta) await borrarNota(audio_ruta);
       return id;
     },
     onSuccess: (id) => {
@@ -278,7 +314,7 @@ export function useAccionesChat(conversacion: string) {
     onSuccess: () => consultas.invalidateQueries({ queryKey: ['social', 'conversaciones'] }),
   });
 
-  return { enviar, borrar, marcarLeida };
+  return { enviar, enviarVoz, borrar, marcarLeida };
 }
 
 /** Abre (o crea) la conversación directa con un amigo y devuelve su id. */
