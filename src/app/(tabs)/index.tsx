@@ -26,6 +26,8 @@ import { useRanking } from '@/hooks/use-ranking';
 import { usePreferencias } from '@/preferencias/contexto';
 import { useRegion } from '@/region/contexto';
 import { nivelCalima } from '@/scoring/puntuacion';
+import { useSesion } from '@/sesion/contexto';
+import { useNotificaciones } from '@/social/notificaciones';
 import { espacio, fuentes, useTema } from '@/theme';
 import { cieloDe, horaDecimal } from '@/utils/luz';
 import { etiquetaPlan, horaCorta } from '@/utils/resumen';
@@ -40,6 +42,9 @@ export default function PantallaHoy() {
   const { width: anchoPantalla } = useWindowDimensions();
   const { preferencias, cambiar } = usePreferencias();
   const { zona } = useRegion();
+  const { sesion } = useSesion();
+  const { data: notificaciones } = useNotificaciones();
+  const avisosSinLeer = notificaciones?.filter((aviso) => !aviso.leida).length ?? 0;
   const { consulta, ranking, calima, polvo, nubosidad } = useRanking();
   const [arranque] = useState(() => Date.now());
   const [refrescando, setRefrescando] = useState(false);
@@ -167,6 +172,8 @@ export default function PantallaHoy() {
           ahora={ahora}
           zona={zona?.nombre ?? ''}
           alCambiarZona={() => router.push('/zona')}
+          avisos={avisosSinLeer}
+          alAbrirAvisos={sesion ? () => router.push('/notificaciones') : undefined}
         />
         <SelectorPlan plan={preferencias.plan} alCambiar={(plan) => cambiar({ plan })} />
         <View style={estilos.lista}>{contenido}</View>

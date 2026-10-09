@@ -1,56 +1,141 @@
-import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { Alert, ScrollView, Share, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
+import { useState } from "react";
+import { Alert, ScrollView, Share, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Avatar } from '@/components/avatar';
-import { Boton } from '@/components/boton';
-import { CabeceraCielo } from '@/components/cabecera-cielo';
-import { Esqueleto } from '@/components/esqueleto';
-import { ALTO_PESTANAS, useBarraEstado } from '@/components/pantalla';
-import { Seccion } from '@/components/seccion';
-import { SeccionPreferencias } from '@/components/seccion-preferencias';
-import { Segmentado } from '@/components/segmentado';
-import { Texto } from '@/components/texto';
-import { mensajeDeError, supabase, supabaseConfigurado, type Privacidad } from '@/lib/supabase';
-import { useRegion } from '@/region/contexto';
-import { useActualizarPerfil, useMiPerfil, useSesion } from '@/sesion/contexto';
-import { useRelaciones } from '@/social/amigos';
-import { useInvitacionesGrupo, useMisGrupos } from '@/social/grupos';
-import { espacio, radio, sombra, useTema } from '@/theme';
+import { Avatar } from "@/components/avatar";
+import { Boton } from "@/components/boton";
+import { CabeceraCielo } from "@/components/cabecera-cielo";
+import { Esqueleto } from "@/components/esqueleto";
+import { ALTO_PESTANAS, useBarraEstado } from "@/components/pantalla";
+import { Seccion } from "@/components/seccion";
+import { SeccionPreferencias } from "@/components/seccion-preferencias";
+import { Segmentado } from "@/components/segmentado";
+import { Texto } from "@/components/texto";
+import {
+  mensajeDeError,
+  supabase,
+  supabaseConfigurado,
+  type Privacidad,
+} from "@/lib/supabase";
+import { useRegion } from "@/region/contexto";
+import { useActualizarPerfil, useMiPerfil, useSesion } from "@/sesion/contexto";
+import { useRelaciones } from "@/social/amigos";
+import { useInvitacionesGrupo, useMisGrupos } from "@/social/grupos";
+import {
+  darDeBajaDispositivo,
+  registrarDispositivo,
+  useNotificaciones,
+  type EstadoPush,
+} from "@/social/notificaciones";
+import { espacio, radio, sombra, useTema } from "@/theme";
 
 const PRIVACIDADES: { valor: Privacidad; etiqueta: string }[] = [
-  { valor: 'publico', etiqueta: 'Público' },
-  { valor: 'amigos', etiqueta: 'Solo amigos' },
+  { valor: "publico", etiqueta: "Público" },
+  { valor: "amigos", etiqueta: "Solo amigos" },
 ];
 
 const AYUDA_PRIVACIDAD: Record<Privacidad, string> = {
-  publico: 'Cualquier persona registrada puede ver tu perfil.',
-  amigos: 'Solo tus amigos ven tu perfil. Los demás pueden encontrarte por tu nombre de usuario para enviarte una solicitud.',
+  publico: "Cualquier persona registrada puede ver tu perfil.",
+  amigos:
+    "Solo tus amigos ven tu perfil. Los demás pueden encontrarte por tu nombre de usuario para enviarte una solicitud.",
 };
+
+const MENSAJE_PUSH: Record<EstadoPush, string> = {
+  activado: "Avisos activados en este móvil.",
+  "expo-go":
+    "Expo Go no puede recibir avisos con la app cerrada. Funcionarán cuando instales una versión propia de Playeo.",
+  simulador: "Los avisos con la app cerrada solo funcionan en un móvil real.",
+  "sin-proyecto":
+    "Falta configurar el proyecto de Expo (EAS) para poder enviar avisos.",
+  "sin-permiso":
+    "No has dado permiso. Puedes activarlo en los ajustes del móvil.",
+};
+
+/** Centro de avisos y activación de las notificaciones push en este dispositivo. */
+function SeccionAvisos() {
+  const { data: notificaciones } = useNotificaciones();
+  const [estado, setEstado] = useState<EstadoPush>();
+  const [activando, setActivando] = useState(false);
+  const sinLeer = notificaciones?.filter((aviso) => !aviso.leida).length ?? 0;
+
+  const activar = async () => {
+    setActivando(true);
+    try {
+      setEstado(await registrarDispositivo(true));
+    } catch (fallo) {
+      Alert.alert("No se pudieron activar los avisos", mensajeDeError(fallo));
+    } finally {
+      setActivando(false);
+    }
+  };
+
+  return (
+    <Seccion titulo="Avisos">
+      <Texto variante="subtitulo">
+        {sinLeer === 0
+          ? "No tienes avisos sin leer"
+          : sinLeer === 1
+            ? "1 aviso sin leer"
+            : `${sinLeer} avisos sin leer`}
+      </Texto>
+      <Boton
+        titulo="Ver avisos"
+        variante={sinLeer > 0 ? "principal" : "secundario"}
+        onPress={() => router.push("/notificaciones")}
+      />
+      <Boton
+        titulo="Avisarme con la app cerrada"
+        variante="secundario"
+        onPress={activar}
+        cargando={activando}
+      />
+      {estado ? (
+        <Texto
+          variante="detalle"
+          color="textoSecundario"
+          accessibilityLiveRegion="polite"
+        >
+          {MENSAJE_PUSH[estado]}
+        </Texto>
+      ) : null}
+    </Seccion>
+  );
+}
+
+/** Cierra sesión dando antes de baja este dispositivo, para que no reciba avisos ajenos. */
+async function cerrarSesion() {
+  await darDeBajaDispositivo().catch(() => {});
+  await supabase.auth.signOut();
+}
 
 /** Resumen de amigos con acceso a la lista y a las solicitudes pendientes. */
 function SeccionAmigos() {
   const { data: relaciones } = useRelaciones();
-  const amigos = relaciones?.filter((u) => u.relacion === 'amigo').length ?? 0;
-  const pendientes = relaciones?.filter((u) => u.relacion === 'solicitud_recibida').length ?? 0;
+  const amigos = relaciones?.filter((u) => u.relacion === "amigo").length ?? 0;
+  const pendientes =
+    relaciones?.filter((u) => u.relacion === "solicitud_recibida").length ?? 0;
 
   return (
     <Seccion titulo="Amigos">
       <Texto variante="subtitulo">
-        {amigos === 0 ? 'Aún no tienes amigos' : amigos === 1 ? '1 amigo' : `${amigos} amigos`}
+        {amigos === 0
+          ? "Aún no tienes amigos"
+          : amigos === 1
+            ? "1 amigo"
+            : `${amigos} amigos`}
       </Texto>
       {pendientes > 0 ? (
         <Texto variante="detalle" color="primario">
           {pendientes === 1
-            ? 'Tienes 1 solicitud por responder.'
+            ? "Tienes 1 solicitud por responder."
             : `Tienes ${pendientes} solicitudes por responder.`}
         </Texto>
       ) : null}
       <Boton
-        titulo={pendientes > 0 ? 'Ver solicitudes' : 'Buscar y ver amigos'}
-        onPress={() => router.push('/amigos')}
+        titulo={pendientes > 0 ? "Ver solicitudes" : "Buscar y ver amigos"}
+        onPress={() => router.push("/amigos")}
       />
     </Seccion>
   );
@@ -66,19 +151,23 @@ function SeccionGrupos() {
   return (
     <Seccion titulo="Grupos">
       <Texto variante="subtitulo">
-        {total === 0 ? 'Aún no estás en ningún grupo' : total === 1 ? '1 grupo' : `${total} grupos`}
+        {total === 0
+          ? "Aún no estás en ningún grupo"
+          : total === 1
+            ? "1 grupo"
+            : `${total} grupos`}
       </Texto>
       {pendientes > 0 ? (
         <Texto variante="detalle" color="primario">
           {pendientes === 1
-            ? 'Tienes 1 invitación por responder.'
+            ? "Tienes 1 invitación por responder."
             : `Tienes ${pendientes} invitaciones por responder.`}
         </Texto>
       ) : null}
       <Boton
-        titulo={pendientes > 0 ? 'Ver invitaciones' : 'Ver y crear grupos'}
-        variante={pendientes > 0 ? 'principal' : 'secundario'}
-        onPress={() => router.push('/grupos')}
+        titulo={pendientes > 0 ? "Ver invitaciones" : "Ver y crear grupos"}
+        variante={pendientes > 0 ? "principal" : "secundario"}
+        onPress={() => router.push("/grupos")}
       />
     </Seccion>
   );
@@ -89,12 +178,15 @@ function SeccionZona() {
   const { zona } = useRegion();
 
   return (
-    <Seccion titulo="Tu zona" descripcion="Las playas que ves en Hoy y en el mapa.">
+    <Seccion
+      titulo="Tu zona"
+      descripcion="Las playas que ves en Hoy y en el mapa."
+    >
       <Texto variante="subtitulo">{zona?.nombre}</Texto>
       <Boton
         titulo="Cambiar de zona"
         variante="secundario"
-        onPress={() => router.push('/zona')}
+        onPress={() => router.push("/zona")}
       />
     </Seccion>
   );
@@ -111,8 +203,8 @@ function SinSesion() {
           Las funciones sociales no están configuradas
         </Texto>
         <Texto variante="detalle" color="sobreArena">
-          Falta el archivo .env.local con la dirección de Supabase. El ranking y el mapa
-          funcionan igual sin él.
+          Falta el archivo .env.local con la dirección de Supabase. El ranking y
+          el mapa funcionan igual sin él.
         </Texto>
       </View>
     );
@@ -124,17 +216,21 @@ function SinSesion() {
         estilos.invitacion,
         sombra(esOscuro),
         { backgroundColor: colores.superficie, borderColor: colores.borde },
-      ]}>
+      ]}
+    >
       <Texto variante="titulo">Queda con tu gente en la playa</Texto>
       <Texto color="textoSecundario">
-        Con una cuenta podrás añadir amigos, crear grupos y organizar quedadas en tu playa
-        favorita.
+        Con una cuenta podrás añadir amigos, crear grupos y organizar quedadas
+        en tu playa favorita.
       </Texto>
-      <Boton titulo="Crear cuenta" onPress={() => router.push('/cuenta/registro')} />
+      <Boton
+        titulo="Crear cuenta"
+        onPress={() => router.push("/cuenta/registro")}
+      />
       <Boton
         titulo="Ya tengo cuenta"
         variante="secundario"
-        onPress={() => router.push('/cuenta/entrar')}
+        onPress={() => router.push("/cuenta/entrar")}
       />
     </View>
   );
@@ -146,36 +242,42 @@ function ConSesion() {
   const { data: perfil, isPending, isError, refetch } = useMiPerfil();
   const actualizar = useActualizarPerfil();
   const { zona } = useRegion();
-  const [ocupado, setOcupado] = useState<'exportar' | 'borrar' | null>(null);
+  const [ocupado, setOcupado] = useState<"exportar" | "borrar" | null>(null);
 
   const exportar = async () => {
-    setOcupado('exportar');
-    const { data, error } = await supabase.rpc('exportar_mis_datos');
+    setOcupado("exportar");
+    const { data, error } = await supabase.rpc("exportar_mis_datos");
     setOcupado(null);
-    if (error) Alert.alert('No se pudo exportar', mensajeDeError(error));
-    else await Share.share({ title: 'Mis datos de Playeo', message: JSON.stringify(data, null, 2) });
+    if (error) Alert.alert("No se pudo exportar", mensajeDeError(error));
+    else
+      await Share.share({
+        title: "Mis datos de Playeo",
+        message: JSON.stringify(data, null, 2),
+      });
   };
 
   const borrar = async () => {
-    setOcupado('borrar');
-    const { error } = await supabase.functions.invoke('borrar-cuenta', { method: 'POST' });
+    setOcupado("borrar");
+    const { error } = await supabase.functions.invoke("borrar-cuenta", {
+      method: "POST",
+    });
     setOcupado(null);
     if (error) {
-      Alert.alert('No se pudo borrar la cuenta', mensajeDeError(error));
+      Alert.alert("No se pudo borrar la cuenta", mensajeDeError(error));
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     // La cuenta ya no existe en el servidor: solo queda limpiar la sesión del móvil.
-    await supabase.auth.signOut({ scope: 'local' });
+    await supabase.auth.signOut({ scope: "local" });
   };
 
   const confirmarBorrado = () => {
     Alert.alert(
-      'Borrar tu cuenta',
-      'Se eliminarán tu perfil, tu foto y todo lo que hayas creado. No se puede deshacer.',
+      "Borrar tu cuenta",
+      "Se eliminarán tu perfil, tu foto y todo lo que hayas creado. No se puede deshacer.",
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Borrar cuenta', style: 'destructive', onPress: borrar },
+        { text: "Cancelar", style: "cancel" },
+        { text: "Borrar cuenta", style: "destructive", onPress: borrar },
       ],
     );
   };
@@ -189,10 +291,15 @@ function ConSesion() {
           No hemos podido cargar tu perfil
         </Texto>
         <Texto variante="detalle" color="sobreArena">
-          Comprueba que Supabase está arrancado y que el móvil está en la misma wifi.
+          Comprueba que Supabase está arrancado y que el móvil está en la misma
+          wifi.
         </Texto>
         <Boton titulo="Reintentar" onPress={() => refetch()} />
-        <Boton titulo="Cerrar sesión" variante="secundario" onPress={() => supabase.auth.signOut()} />
+        <Boton
+          titulo="Cerrar sesión"
+          variante="secundario"
+          onPress={() => supabase.auth.signOut()}
+        />
       </View>
     );
   }
@@ -204,29 +311,35 @@ function ConSesion() {
           estilos.ficha,
           sombra(esOscuro),
           { backgroundColor: colores.superficie, borderColor: colores.borde },
-        ]}>
+        ]}
+      >
         <View style={estilos.identidad}>
-          <Avatar ruta={perfil.ruta_foto} nombre={perfil.nombre_visible} tamano={76} />
+          <Avatar
+            ruta={perfil.ruta_foto}
+            nombre={perfil.nombre_visible}
+            tamano={76}
+          />
           <View style={estilos.nombres}>
             <Texto variante="titulo" numberOfLines={2}>
               {perfil.nombre_visible}
             </Texto>
             <Texto variante="detalle" color="textoSecundario">
               @{perfil.nombre_usuario}
-              {zona ? `, ${zona.nombre}` : ''}
+              {zona ? `, ${zona.nombre}` : ""}
             </Texto>
           </View>
         </View>
-        <Texto color={perfil.bio ? 'texto' : 'textoSecundario'}>
-          {perfil.bio ?? 'Aún no has escrito nada sobre ti.'}
+        <Texto color={perfil.bio ? "texto" : "textoSecundario"}>
+          {perfil.bio ?? "Aún no has escrito nada sobre ti."}
         </Texto>
         <Boton
           titulo="Editar perfil"
           variante="secundario"
-          onPress={() => router.push('/cuenta/editar')}
+          onPress={() => router.push("/cuenta/editar")}
         />
       </View>
 
+      <SeccionAvisos />
       <SeccionAmigos />
       <SeccionGrupos />
       <SeccionZona />
@@ -245,7 +358,7 @@ function ConSesion() {
         <Boton
           titulo="Personas bloqueadas"
           variante="secundario"
-          onPress={() => router.push('/bloqueados')}
+          onPress={() => router.push("/bloqueados")}
         />
       </Seccion>
 
@@ -254,14 +367,18 @@ function ConSesion() {
           titulo="Exportar mis datos"
           variante="secundario"
           onPress={exportar}
-          cargando={ocupado === 'exportar'}
+          cargando={ocupado === "exportar"}
         />
-        <Boton titulo="Cerrar sesión" variante="secundario" onPress={() => supabase.auth.signOut()} />
+        <Boton
+          titulo="Cerrar sesión"
+          variante="secundario"
+          onPress={cerrarSesion}
+        />
         <Boton
           titulo="Borrar mi cuenta"
           variante="peligro"
           onPress={confirmarBorrado}
-          cargando={ocupado === 'borrar'}
+          cargando={ocupado === "borrar"}
         />
       </Seccion>
     </>
@@ -272,12 +389,15 @@ export default function PantallaPerfil() {
   const { colores } = useTema();
   const insets = useSafeAreaInsets();
   const { sesion, lista } = useSesion();
-  useBarraEstado('clara');
+  useBarraEstado("clara");
 
   return (
     <ScrollView
       style={{ backgroundColor: colores.fondo }}
-      contentContainerStyle={{ paddingBottom: insets.bottom + ALTO_PESTANAS + espacio.l }}>
+      contentContainerStyle={{
+        paddingBottom: insets.bottom + ALTO_PESTANAS + espacio.l,
+      }}
+    >
       <CabeceraCielo titulo="Perfil" subtitulo="Tu cuenta y tu playa ideal." />
       <View style={estilos.contenido}>
         {!lista ? (
@@ -303,7 +423,7 @@ const estilos = StyleSheet.create({
     gap: espacio.s,
     borderRadius: radio.xl,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   ficha: {
     padding: espacio.m,
@@ -311,6 +431,6 @@ const estilos = StyleSheet.create({
     borderRadius: radio.xl,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  identidad: { flexDirection: 'row', alignItems: 'center', gap: espacio.m },
+  identidad: { flexDirection: "row", alignItems: "center", gap: espacio.m },
   nombres: { flex: 1, gap: 2 },
 });

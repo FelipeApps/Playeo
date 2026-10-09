@@ -321,6 +321,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notificaciones": {
+                  Row: {
+                    "actor_id": string | null,"creada": string,"datos": NonNullable<Json>,"id": number,"leida": string | null,"tipo": Database["public"]['Enums']["tipo_notificacion"],"usuario_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor_id"?: string | null,"creada"?: string,"datos"?: NonNullable<Json>,"id"?: never,"leida"?: string | null,"tipo": Database["public"]['Enums']["tipo_notificacion"],"usuario_id": string
+                  }
+                  Update: {
+                    "actor_id"?: string | null,"creada"?: string,"datos"?: NonNullable<Json>,"id"?: never,"leida"?: string | null,"tipo"?: Database["public"]['Enums']["tipo_notificacion"],"usuario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notificaciones_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notificaciones_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"perfiles": {
                   Row: {
                     "actualizado": string,"bio": string | null,"creado": string,"id": string,"mayoria_edad_confirmada": string | null,"nombre_usuario": string,"nombre_visible": string,"preferencias_playa": NonNullable<Json>,"privacidad": Database["public"]['Enums']["privacidad_perfil"],"ruta_foto": string | null,"zona": string | null
@@ -376,6 +402,26 @@ isOneToOne: false
     },{
       foreignKeyName: "reportes_usuario_reportado_id_fkey"
       columns: ["usuario_reportado_id"]
+isOneToOne: false
+      referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"tokens_push": {
+                  Row: {
+                    "actualizado": string,"plataforma": string,"token": string,"usuario_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actualizado"?: string,"plataforma": string,"token": string,"usuario_id": string
+                  }
+                  Update: {
+                    "actualizado"?: string,"plataforma"?: string,"token"?: string,"usuario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tokens_push_usuario_id_fkey"
+      columns: ["usuario_id"]
 isOneToOne: false
       referencedRelation: "perfiles"
       referencedColumns: ["id"]
@@ -460,6 +506,11 @@ isOneToOne: false
               "creada": string,"grupo_descripcion": string,"grupo_id": string,"grupo_nombre": string,"invitador_nombre": string
             }[]
                            },
+"mis_notificaciones":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "actor_foto": string,"actor_id": string,"actor_nombre": string,"creada": string,"datos": Json,"id": number,"leida": string,"tipo": Database["public"]['Enums']["tipo_notificacion"]
+            }[]
+                           },
 "mis_relaciones":
 { Args: Record<PropertyKey, never>; Returns: {
               "desde": string,"id": string,"nombre_usuario": string,"nombre_visible": string,"relacion": Database["public"]['Enums']["relacion_usuario"],"ruta_foto": string
@@ -473,6 +524,9 @@ isOneToOne: false
               "id": string,"leido_hasta": string,"nombre_usuario": string,"nombre_visible": string,"ruta_foto": string
             }[]
                            },
+"registrar_token_push":
+{ Args: { "plataforma": string,"token": string }; Returns: undefined
+                           },
 "ver_usuario":
 { Args: { "usuario": string }; Returns: {
               "bio": string,"id": string,"nombre_usuario": string,"nombre_visible": string,"perfil_visible": boolean,"relacion": Database["public"]['Enums']["relacion_usuario"],"ruta_foto": string,"zona": string
@@ -480,7 +534,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "estado_amistad": "pendiente"|"aceptada","estado_reporte": "abierto"|"revisado"|"cerrado","motivo_reporte": "spam"|"acoso"|"contenido_inapropiado"|"suplantacion"|"otro","privacidad_perfil": "publico"|"amigos","relacion_usuario": "yo"|"ninguna"|"amigo"|"solicitud_enviada"|"solicitud_recibida"|"bloqueado","respuesta_evento": "voy"|"quiza"|"no_voy","rol_grupo": "admin"|"miembro","tipo_conversacion": "directa"|"grupo"|"evento","visibilidad_evento": "amigos"|"grupo"|"publico"
+            "estado_amistad": "pendiente"|"aceptada","estado_reporte": "abierto"|"revisado"|"cerrado","motivo_reporte": "spam"|"acoso"|"contenido_inapropiado"|"suplantacion"|"otro","privacidad_perfil": "publico"|"amigos","relacion_usuario": "yo"|"ninguna"|"amigo"|"solicitud_enviada"|"solicitud_recibida"|"bloqueado","respuesta_evento": "voy"|"quiza"|"no_voy","rol_grupo": "admin"|"miembro","tipo_conversacion": "directa"|"grupo"|"evento","tipo_notificacion": "solicitud_amistad"|"amistad_aceptada"|"invitacion_grupo"|"invitacion_evento"|"mensaje_nuevo","visibilidad_evento": "amigos"|"grupo"|"publico"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -600,7 +654,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "estado_amistad": ["pendiente", "aceptada"],"estado_reporte": ["abierto", "revisado", "cerrado"],"motivo_reporte": ["spam", "acoso", "contenido_inapropiado", "suplantacion", "otro"],"privacidad_perfil": ["publico", "amigos"],"relacion_usuario": ["yo", "ninguna", "amigo", "solicitud_enviada", "solicitud_recibida", "bloqueado"],"respuesta_evento": ["voy", "quiza", "no_voy"],"rol_grupo": ["admin", "miembro"],"tipo_conversacion": ["directa", "grupo", "evento"],"visibilidad_evento": ["amigos", "grupo", "publico"]
+            "estado_amistad": ["pendiente", "aceptada"],"estado_reporte": ["abierto", "revisado", "cerrado"],"motivo_reporte": ["spam", "acoso", "contenido_inapropiado", "suplantacion", "otro"],"privacidad_perfil": ["publico", "amigos"],"relacion_usuario": ["yo", "ninguna", "amigo", "solicitud_enviada", "solicitud_recibida", "bloqueado"],"respuesta_evento": ["voy", "quiza", "no_voy"],"rol_grupo": ["admin", "miembro"],"tipo_conversacion": ["directa", "grupo", "evento"],"tipo_notificacion": ["solicitud_amistad", "amistad_aceptada", "invitacion_grupo", "invitacion_evento", "mensaje_nuevo"],"visibilidad_evento": ["amigos", "grupo", "publico"]
           }
         }
 } as const

@@ -1,23 +1,28 @@
-import { BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque/700Bold';
-import { BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque/800ExtraBold';
-import { InstrumentSans_400Regular } from '@expo-google-fonts/instrument-sans/400Regular';
-import { InstrumentSans_500Medium } from '@expo-google-fonts/instrument-sans/500Medium';
-import { InstrumentSans_600SemiBold } from '@expo-google-fonts/instrument-sans/600SemiBold';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BricolageGrotesque_700Bold } from "@expo-google-fonts/bricolage-grotesque/700Bold";
+import { BricolageGrotesque_800ExtraBold } from "@expo-google-fonts/bricolage-grotesque/800ExtraBold";
+import { InstrumentSans_400Regular } from "@expo-google-fonts/instrument-sans/400Regular";
+import { InstrumentSans_500Medium } from "@expo-google-fonts/instrument-sans/500Medium";
+import { InstrumentSans_600SemiBold } from "@expo-google-fonts/instrument-sans/600SemiBold";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { useFonts } from "expo-font";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { ProveedorPreferencias } from '@/preferencias/contexto';
-import { ProveedorRegion } from '@/region/contexto';
-import { ProveedorSesion } from '@/sesion/contexto';
-import { fuentes, useTema } from '@/theme';
+import { ProveedorPreferencias } from "@/preferencias/contexto";
+import { ProveedorRegion } from "@/region/contexto";
+import { ProveedorSesion, useSesion } from "@/sesion/contexto";
+import {
+  registrarDispositivo,
+  useAbrirDesdePush,
+  useEscucharNotificaciones,
+} from "@/social/notificaciones";
+import { fuentes, useTema } from "@/theme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,8 +40,26 @@ const clienteConsultas = new QueryClient({
 
 const persistencia = createAsyncStoragePersister({
   storage: AsyncStorage,
-  key: 'playeo/consultas',
+  key: "playeo/consultas",
 });
+
+/**
+ * Vida social en segundo plano mientras la app está abierta: avisos en vivo, apertura
+ * desde una push y registro del dispositivo si el permiso ya estaba concedido.
+ */
+function EscuchaSocial() {
+  const { sesion } = useSesion();
+  const idUsuario = sesion?.user.id;
+  useEscucharNotificaciones();
+  useAbrirDesdePush();
+
+  useEffect(() => {
+    // Sin diálogo: solo registra si el usuario ya dio permiso en su momento.
+    if (idUsuario) registrarDispositivo(false).catch(() => {});
+  }, [idUsuario]);
+
+  return null;
+}
 
 export default function LayoutRaiz() {
   const { colores, esOscuro } = useTema();
@@ -80,22 +103,26 @@ export default function LayoutRaiz() {
           // Los datos sociales (perfil, chats) no se guardan en disco: solo el tiempo y el mar.
           dehydrateOptions: {
             shouldDehydrateQuery: (consulta) =>
-              consulta.state.status === 'success' && consulta.queryKey[0] !== 'social',
+              consulta.state.status === "success" &&
+              consulta.queryKey[0] !== "social",
           },
-        }}>
+        }}
+      >
         <ProveedorRegion>
           <ProveedorPreferencias>
             <ProveedorSesion>
+              <EscuchaSocial />
               <ThemeProvider value={temaNavegacion}>
                 <Stack
                   screenOptions={{
                     headerShown: false,
                     headerTitleStyle: { fontFamily: fuentes.titulo },
                     contentStyle: { backgroundColor: colores.fondo },
-                  }}>
+                  }}
+                >
                   <Stack.Screen name="(tabs)" />
                   <Stack.Screen name="zona" />
-                <Stack.Screen name="playa/[id]" />
+                  <Stack.Screen name="playa/[id]" />
                   <Stack.Screen name="cuenta/entrar" />
                   <Stack.Screen name="cuenta/registro" />
                   <Stack.Screen name="cuenta/verificar" />
@@ -113,6 +140,7 @@ export default function LayoutRaiz() {
                   <Stack.Screen name="evento/nuevo" />
                   <Stack.Screen name="evento/[id]/index" />
                   <Stack.Screen name="evento/[id]/invitar" />
+                  <Stack.Screen name="notificaciones" />
                 </Stack>
               </ThemeProvider>
             </ProveedorSesion>

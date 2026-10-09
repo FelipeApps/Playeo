@@ -44,3 +44,6 @@ example
 
 # Vista previa web temporal
 .tmp-web/
+
+# Variables de las Edge Functions en local
+supabase/functions/.env
