@@ -74,7 +74,10 @@ export default function PantallaReportar() {
           </Texto>
         </View>
       ) : null}
-      <View accessibilityRole="radiogroup" accessibilityLabel="Motivo del reporte" style={estilos.lista}>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Motivo del reporte"
+        style={estilos.lista}>
         {MOTIVOS.map((opcion) => {
           const activo = opcion.valor === motivo;
           return (
@@ -94,8 +97,14 @@ export default function PantallaReportar() {
                   borderWidth: activo ? 2 : 1,
                 },
               ]}>
-              <View style={[estilos.circulo, { borderColor: activo ? colores.primario : colores.textoSecundario }]}>
-                {activo ? <View style={[estilos.punto, { backgroundColor: colores.primario }]} /> : null}
+              <View
+                style={[
+                  estilos.circulo,
+                  { borderColor: activo ? colores.primario : colores.textoSecundario },
+                ]}>
+                {activo ? (
+                  <View style={[estilos.punto, { backgroundColor: colores.primario }]} />
+                ) : null}
               </View>
               <Texto style={estilos.flexible}>{opcion.etiqueta}</Texto>
             </Pressable>

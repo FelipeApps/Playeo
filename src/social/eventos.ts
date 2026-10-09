@@ -5,8 +5,10 @@ import { buscarPlaya } from '@/data/playas';
 import type { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 import { usePreferencias } from '@/preferencias/contexto';
-import { olaEfectiva, puntuar } from '@/scoring/puntuacion';
+import { olaEfectiva, puntuar, puntuarSenderismo } from '@/scoring/puntuacion';
 import { useSesion } from '@/sesion/contexto';
+import { useLugar } from '@/social/lugares';
+import { resumen, resumenMonte } from '@/utils/resumen';
 
 export type Visibilidad = Database['public']['Enums']['visibilidad_evento'];
 export type Respuesta = Database['public']['Enums']['respuesta_evento'];
@@ -99,44 +101,61 @@ const HORAS_ANTES = 1;
 const HORAS_DESPUES = 5;
 
 /**
- * Previsión de la playa para el momento del evento, puntuada con mis preferencias.
- * Reutiliza la integración con Open-Meteo y la misma función de puntuación que Hoy.
+ * Previsión del lugar para el momento de la quedada, puntuada con mis preferencias.
+ * Solo la tienen las actividades con estado: playa (tiempo y mar) y senderismo (tiempo
+ * de monte). Reutiliza la integración con Open-Meteo y las mismas funciones de puntuación.
  */
-export function usePrevisionEvento(playaId: string | undefined, empieza: string | undefined) {
+export function usePrevisionEvento(
+  evento: { lugar_id: string | null; actividad_id: string; empieza: string } | null | undefined,
+) {
   const { preferencias } = usePreferencias();
-  const playa = playaId ? buscarPlaya(playaId) : undefined;
+  const esPlaya = evento?.actividad_id === 'playa';
+  const esRuta = evento?.actividad_id === 'senderismo';
+  const playa = esPlaya && evento.lugar_id ? buscarPlaya(evento.lugar_id) : undefined;
+  // Las rutas no viajan dentro de la app: sus coordenadas se piden al catálogo.
+  const { data: ruta } = useLugar(esRuta ? (evento.lugar_id ?? undefined) : undefined);
+  const punto =
+    playa ?? (ruta?.lat != null && ruta.lon != null ? { lat: ruta.lat, lon: ruta.lon } : undefined);
 
   const consulta = useQuery({
-    // No es 'social': el tiempo de una playa no es dato personal y puede ir a la caché en disco.
-    queryKey: ['prevision-evento', playaId, empieza],
-    enabled: playa != null && empieza != null,
+    // No es 'social': el tiempo de un lugar no es dato personal y puede ir a la caché en disco.
+    queryKey: ['prevision-evento', evento?.lugar_id, evento?.empieza],
+    enabled: punto != null && evento != null,
     retry: false,
-    queryFn: ({ signal }) => obtenerPrevisionDia(playa!, new Date(empieza!), signal),
+    queryFn: ({ signal }) =>
+      obtenerPrevisionDia(punto!, new Date(evento!.empieza), signal, esPlaya),
   });
 
-  if (!playa || !empieza || !consulta.data) return { consulta, horas: [], enElMomento: undefined };
+  const sinPrevision = { consulta, tienePrevision: esPlaya || esRuta, horas: [], frase: undefined };
+  if (!evento || !consulta.data) return sinPrevision;
 
-  const resguardada = playa.caracteristicas?.resguardada ?? false;
-  const inicio = new Date(empieza);
   // La serie viene en UTC: la hora del evento se busca por su prefijo "AAAA-MM-DDTHH".
-  const claveInicio = inicio.toISOString().slice(0, 13);
+  const claveInicio = new Date(evento.empieza).toISOString().slice(0, 13);
   const indice = consulta.data.findIndex((medicion) => medicion.hora.startsWith(claveInicio));
-  if (indice < 0) return { consulta, horas: [], enElMomento: undefined };
+  if (indice < 0) return sinPrevision;
 
+  const resguardada = playa?.caracteristicas?.resguardada ?? false;
   const tramo = consulta.data.slice(Math.max(0, indice - HORAS_ANTES), indice + HORAS_DESPUES + 1);
-  const horas = tramo.map((medicion) => {
-    const instante = new Date(`${medicion.hora}:00Z`);
-    return {
-      // Se muestra en la hora del móvil, igual que la fecha del evento.
-      hora: instante.getHours(),
-      total: puntuar(medicion, playa.caracteristicas, preferencias).total,
-      viento: medicion.viento,
-      ola: olaEfectiva(medicion.olaAltura, resguardada),
-      destacada: medicion.hora.startsWith(claveInicio),
-    };
-  });
+  const horas = tramo.map((medicion) => ({
+    // Se muestra en la hora del móvil, igual que la fecha del evento.
+    hora: new Date(`${medicion.hora}:00Z`).getHours(),
+    total: esPlaya
+      ? puntuar(medicion, playa?.caracteristicas ?? null, preferencias).total
+      : puntuarSenderismo(medicion, preferencias).total,
+    viento: medicion.viento,
+    ...(esPlaya
+      ? { ola: olaEfectiva(medicion.olaAltura, resguardada) }
+      : { lluvia: medicion.probLluvia }),
+    destacada: medicion.hora.startsWith(claveInicio),
+  }));
 
-  return { consulta, horas, enElMomento: consulta.data[indice], resguardada };
+  const enElMomento = consulta.data[indice];
+  return {
+    consulta,
+    tienePrevision: true,
+    horas,
+    frase: esPlaya ? resumen(enElMomento, resguardada, true) : resumenMonte(enElMomento),
+  };
 }
 
 export function useAccionesEvento() {
@@ -147,7 +166,16 @@ export function useAccionesEvento() {
 
   const crear = useMutation({
     mutationFn: async (evento: {
-      playa_id: string;
+      actividad_id: string;
+      /** Solo con la actividad "otros". */
+      actividad_otra: string | null;
+      /** Lugar del catálogo, o `null` si el sitio se escribe a mano. */
+      lugar_id: string | null;
+      ubicacion_nombre: string | null;
+      /** Dirección exacta: solo la verá quien se apunte. */
+      ubicacion_direccion: string | null;
+      /** Zona de la quedada cuando el sitio es a mano; con lugar la pone la base de datos. */
+      region: string | null;
       titulo: string;
       descripcion: string | null;
       empieza: string;
@@ -165,6 +193,31 @@ export function useAccionesEvento() {
       return data.id;
     },
     onSettled: alTerminar,
+  });
+
+  const editar = useMutation({
+    mutationFn: async ({
+      evento,
+      ...cambios
+    }: {
+      evento: string;
+      titulo: string;
+      descripcion: string | null;
+      empieza: string;
+      plazas_maximas: number | null;
+      enlace_whatsapp: string | null;
+      /** Solo se envían si el sitio de la quedada es a mano. */
+      ubicacion_nombre?: string;
+      ubicacion_direccion?: string | null;
+    }) => {
+      const { error } = await supabase.from('eventos').update(cambios).eq('id', evento);
+      if (error) throw error;
+    },
+    onSettled: () => {
+      alTerminar();
+      // La previsión depende de la hora: si cambia, hay que volver a pedirla.
+      consultas.invalidateQueries({ queryKey: ['prevision-evento'] });
+    },
   });
 
   /** Voy, quizá o no voy. Cambia mi respuesta si ya había una; si no, la crea. */
@@ -205,5 +258,5 @@ export function useAccionesEvento() {
     onSettled: alTerminar,
   });
 
-  return { crear, responder, invitar, eliminar };
+  return { crear, editar, responder, invitar, eliminar };
 }

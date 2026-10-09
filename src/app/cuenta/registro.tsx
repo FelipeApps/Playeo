@@ -7,6 +7,7 @@ import { Casilla } from '@/components/casilla';
 import { PantallaFormulario } from '@/components/pantalla-formulario';
 import { Texto } from '@/components/texto';
 import { mensajeDeError, supabase } from '@/lib/supabase';
+import { BotonGoogle } from '@/sesion/google';
 
 const FORMATO_USUARIO = /^[a-zA-Z0-9_.]{3,24}$/;
 const CLAVE_MINIMA = 8;
@@ -69,9 +70,7 @@ export default function PantallaRegistro() {
     adulto;
 
   return (
-    <PantallaFormulario
-      titulo="Crear cuenta"
-      subtitulo="Para quedar con tu gente en la playa.">
+    <PantallaFormulario titulo="Crear cuenta" subtitulo="Para quedar con tu gente en la playa.">
       <CampoTexto
         etiqueta="Nombre"
         ayuda="Como quieres que te vean los demás."
@@ -129,7 +128,13 @@ export default function PantallaRegistro() {
           {error}
         </Texto>
       ) : null}
-      <Boton titulo="Crear cuenta" onPress={registrar} cargando={cargando} deshabilitado={!completo} />
+      <Boton
+        titulo="Crear cuenta"
+        onPress={registrar}
+        cargando={cargando}
+        deshabilitado={!completo}
+      />
+      <BotonGoogle />
       <Boton
         titulo="Ya tengo cuenta"
         variante="secundario"

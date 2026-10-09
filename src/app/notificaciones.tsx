@@ -81,7 +81,9 @@ export default function PantallaNotificaciones() {
                 accessibilityHint="Abre lo relacionado con este aviso"
                 onPress={() => {
                   if (nueva) marcarLeida.mutate(notificacion.id);
-                  router.push(destinoDe(notificacion.tipo, notificacion.datos, notificacion.actor_id));
+                  router.push(
+                    destinoDe(notificacion.tipo, notificacion.datos, notificacion.actor_id),
+                  );
                 }}
                 style={[
                   estilos.fila,
@@ -96,7 +98,9 @@ export default function PantallaNotificaciones() {
                   tamano={46}
                 />
                 <View style={estilos.textos}>
-                  <Texto variante={nueva ? 'cuerpoFuerte' : 'cuerpo'} color={nueva ? 'sobreArena' : 'texto'}>
+                  <Texto
+                    variante={nueva ? 'cuerpoFuerte' : 'cuerpo'}
+                    color={nueva ? 'sobreArena' : 'texto'}>
                     {frase}
                   </Texto>
                   {notificacion.tipo === 'mensaje_nuevo' && notificacion.datos.extracto ? (
@@ -111,7 +115,9 @@ export default function PantallaNotificaciones() {
                     {momentoCorto(notificacion.creada)}
                   </Texto>
                 </View>
-                {nueva ? <View style={[estilos.punto, { backgroundColor: colores.primario }]} /> : null}
+                {nueva ? (
+                  <View style={[estilos.punto, { backgroundColor: colores.primario }]} />
+                ) : null}
               </Presionable>
             );
           })}

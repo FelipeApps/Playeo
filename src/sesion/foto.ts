@@ -25,7 +25,9 @@ export async function elegirYSubirFoto(
   const ruta = `${idUsuario}/${Date.now()}.${extension}`;
 
   const datos = await (await fetch(foto.uri)).arrayBuffer();
-  const { error } = await supabase.storage.from('avatares').upload(ruta, datos, { contentType: tipo });
+  const { error } = await supabase.storage
+    .from('avatares')
+    .upload(ruta, datos, { contentType: tipo });
   if (error) throw error;
 
   if (rutaAnterior) await supabase.storage.from('avatares').remove([rutaAnterior]);

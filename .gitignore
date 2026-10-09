@@ -47,3 +47,6 @@ example
 
 # Variables de las Edge Functions en local
 supabase/functions/.env
+
+# Secretos de Supabase en local (proveedores OAuth)
+supabase/.env

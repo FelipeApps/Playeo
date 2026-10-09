@@ -35,7 +35,16 @@ export function resumen(medicion: Medicion, resguardada: boolean, esDeDia: boole
   return `${mar}, ${cielo} y ${estadoViento(medicion.viento).toLowerCase()}`;
 }
 
-const PUNTOS_CARDINALES = ['norte', 'noreste', 'este', 'sureste', 'sur', 'suroeste', 'oeste', 'noroeste'];
+const PUNTOS_CARDINALES = [
+  'norte',
+  'noreste',
+  'este',
+  'sureste',
+  'sur',
+  'suroeste',
+  'oeste',
+  'noroeste',
+];
 
 /** De dónde sopla: 324° -> "noroeste" */
 export function puntoCardinal(grados: number): string {
@@ -60,4 +69,17 @@ export const etiquetaPlan: Record<Plan, string> = {
 export function horaCorta(marca: number): string {
   const fecha = new Date(marca);
   return `${fecha.getHours()}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+}
+
+/** "Seco, 17 °C y poco viento" para una ruta de monte. */
+export function resumenMonte(medicion: Medicion): string {
+  const cielo =
+    medicion.lluvia > 0.2
+      ? 'Lluvia'
+      : medicion.probLluvia >= 50
+        ? 'Puede llover'
+        : medicion.nubesBajas >= 70
+          ? 'Nubes bajas'
+          : 'Seco';
+  return `${cielo}, ${Math.round(medicion.sensacion)} °C de sensación y ${estadoViento(medicion.viento).toLowerCase()}`;
 }

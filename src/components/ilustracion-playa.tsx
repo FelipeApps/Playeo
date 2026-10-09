@@ -68,7 +68,8 @@ export function IlustracionPlaya({ tipo, proporcion }: Props) {
       width="100%"
       height="100%"
       viewBox={`${x} ${y} ${anchoVista} ${altoVista}`}
-      preserveAspectRatio="none"
+      // Si el contenedor no tiene justo la proporción prevista, se recorta: nunca se deforma.
+      preserveAspectRatio="xMidYMax slice"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants">
       <Defs>
@@ -86,7 +87,13 @@ export function IlustracionPlaya({ tipo, proporcion }: Props) {
       <Circle cx={88} cy={solY} r={12} fill="#FFD23F" />
       <Rect y={60} width={120} height={60} fill="url(#mar)" />
       <Path d="M0 68 H46" stroke="#FFFFFF" strokeWidth={1.2} opacity={0.35} strokeLinecap="round" />
-      <Path d="M62 74 H120" stroke="#FFFFFF" strokeWidth={1.2} opacity={0.3} strokeLinecap="round" />
+      <Path
+        d="M62 74 H120"
+        stroke="#FFFFFF"
+        strokeWidth={1.2}
+        opacity={0.3}
+        strokeLinecap="round"
+      />
       <Orilla tipo={tipo} />
     </Svg>
   );

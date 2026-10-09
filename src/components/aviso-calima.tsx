@@ -34,7 +34,10 @@ export function AvisoCalima({ nivel, polvo, sensible }: Props) {
     <View
       accessible
       accessibilityRole="alert"
-      style={[estilos.aviso, { backgroundColor: colores.fondoCalima, borderColor: colores.calima }]}>
+      style={[
+        estilos.aviso,
+        { backgroundColor: colores.fondoCalima, borderColor: colores.calima },
+      ]}>
       <View style={[estilos.medallon, { backgroundColor: colores.calima }]}>
         <Icono nombre="calima" color={colores.fondoCalima} />
       </View>

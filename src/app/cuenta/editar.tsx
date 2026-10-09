@@ -64,7 +64,12 @@ function Formulario({ perfil }: { perfil: Perfil }) {
     <>
       <View style={estilos.foto}>
         <Avatar ruta={rutaFoto} nombre={nombre} tamano={96} />
-        <Boton titulo="Cambiar foto" variante="secundario" onPress={cambiarFoto} cargando={subiendo} />
+        <Boton
+          titulo="Cambiar foto"
+          variante="secundario"
+          onPress={cambiarFoto}
+          cargando={subiendo}
+        />
       </View>
 
       <CampoTexto etiqueta="Nombre" value={nombre} onChangeText={setNombre} maxLength={50} />

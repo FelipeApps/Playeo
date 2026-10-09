@@ -1,7 +1,7 @@
 import { useColorScheme } from 'react-native';
 
 /**
- * Tema de Playeo.
+ * Tema de Planeo.
  * Azules del Atlántico, arena y amarillo sol sobre una bruma muy clara; de noche,
  * el azul casi negro del mar abierto. La calima tiene su propio ocre para que el
  * aviso no se confunda con ningún otro estado.

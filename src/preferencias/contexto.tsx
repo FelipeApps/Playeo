@@ -3,7 +3,7 @@ import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 
 import { PREFERENCIAS_POR_DEFECTO, type Preferencias } from '@/scoring/puntuacion';
 
-const CLAVE = 'playeo/preferencias';
+const CLAVE = 'planeo/preferencias';
 
 interface Valor {
   preferencias: Preferencias;

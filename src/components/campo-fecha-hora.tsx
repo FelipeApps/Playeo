@@ -53,11 +53,18 @@ export function CampoFechaHora({ etiqueta, valor, alCambiar, minimo }: Props) {
           accessibilityLabel={`${etiqueta}: ${cuando(valor)}`}
           accessibilityHint="Abre el selector de fecha y hora"
           onPress={abrirEnAndroid}
-          style={[estilos.caja, { backgroundColor: colores.superficie, borderColor: colores.borde }]}>
+          style={[
+            estilos.caja,
+            { backgroundColor: colores.superficie, borderColor: colores.borde },
+          ]}>
           <Texto>{cuando(valor)}</Texto>
         </Presionable>
       ) : (
-        <View style={[estilos.caja, { backgroundColor: colores.superficie, borderColor: colores.borde }]}>
+        <View
+          style={[
+            estilos.caja,
+            { backgroundColor: colores.superficie, borderColor: colores.borde },
+          ]}>
           <DateTimePicker
             value={valor}
             mode="datetime"

@@ -1,6 +1,9 @@
 import {
   intensidadCalima,
   mejorFranja,
+  PESOS_MONTE,
+  puntuarSenderismo,
+  type DatosMonte,
   nivelCalima,
   nivelPuntuacion,
   olaEfectiva,
@@ -176,7 +179,86 @@ describe('mejorFranja', () => {
   });
 
   it('no recomienda nada si faltan horas seguidas', () => {
-    expect(mejorFranja([{ hora: 9, total: 80 }, { hora: 12, total: 80 }, { hora: 15, total: 80 }])).toBeNull();
+    expect(
+      mejorFranja([
+        { hora: 9, total: 80 },
+        { hora: 12, total: 80 },
+        { hora: 15, total: 80 },
+      ]),
+    ).toBeNull();
     expect(mejorFranja([])).toBeNull();
+  });
+});
+
+describe('puntuarSenderismo', () => {
+  const diaDeMonte: DatosMonte = {
+    viento: 6,
+    rachas: 10,
+    sensacion: 17,
+    lluvia: 0,
+    probLluvia: 0,
+    nubesBajas: 10,
+    visibilidad: 30000,
+    uv: 4,
+    polvo: 0,
+    aod: 0.08,
+  };
+  const normal = { toleranciaViento: 'media', sensibleCalima: false } as const;
+
+  it('da una nota muy alta a un día seco, templado y despejado', () => {
+    expect(puntuarSenderismo(diaDeMonte, normal).total).toBeGreaterThanOrEqual(95);
+  });
+
+  it('los pesos suman 1', () => {
+    expect(Object.values(PESOS_MONTE).reduce((a, b) => a + b, 0)).toBeCloseTo(1);
+  });
+
+  it('la lluvia hunde la nota, caiga ya o sea muy probable', () => {
+    const seco = puntuarSenderismo(diaDeMonte, normal).total;
+    expect(puntuarSenderismo({ ...diaDeMonte, lluvia: 4 }, normal).total).toBeLessThan(seco - 25);
+    expect(puntuarSenderismo({ ...diaDeMonte, probLluvia: 90 }, normal).total).toBeLessThan(
+      seco - 15,
+    );
+  });
+
+  it('penaliza tanto el frío como el calor', () => {
+    const templado = puntuarSenderismo(diaDeMonte, normal).factores.temperatura;
+    const frio = puntuarSenderismo({ ...diaDeMonte, sensacion: 2 }, normal).factores.temperatura;
+    const calor = puntuarSenderismo({ ...diaDeMonte, sensacion: 31 }, normal).factores.temperatura;
+    expect(frio).toBeLessThan(templado);
+    expect(calor).toBeLessThan(templado);
+  });
+
+  it('las nubes bajas y la niebla restan visibilidad', () => {
+    const cubierto = puntuarSenderismo({ ...diaDeMonte, nubesBajas: 100 }, normal).factores
+      .visibilidad;
+    const conNiebla = puntuarSenderismo(
+      { ...diaDeMonte, nubesBajas: 100, visibilidad: 300 },
+      normal,
+    ).factores.visibilidad;
+    expect(cubierto).toBeLessThan(0.5);
+    expect(conNiebla).toBeLessThan(cubierto);
+  });
+
+  it('se mantiene entre 0 y 100 y respeta el tope de calima para sensibles', () => {
+    const temporal: DatosMonte = {
+      viento: 90,
+      rachas: 130,
+      sensacion: -5,
+      lluvia: 20,
+      probLluvia: 100,
+      nubesBajas: 100,
+      visibilidad: 50,
+      uv: 12,
+      polvo: 900,
+      aod: 2,
+    };
+    expect(puntuarSenderismo(temporal, normal).total).toBeGreaterThanOrEqual(0);
+    expect(
+      puntuarSenderismo(
+        { ...diaDeMonte, polvo: 400, aod: 1.2 },
+        { ...normal, sensibleCalima: true },
+      ).total,
+    ).toBeLessThanOrEqual(45);
   });
 });

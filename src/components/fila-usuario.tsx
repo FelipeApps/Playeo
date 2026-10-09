@@ -35,7 +35,8 @@ export function FilaUsuario({ usuario, children, abreFicha = true }: Props) {
   );
 
   return (
-    <View style={[estilos.fila, { backgroundColor: colores.superficie, borderColor: colores.borde }]}>
+    <View
+      style={[estilos.fila, { backgroundColor: colores.superficie, borderColor: colores.borde }]}>
       {/* El contenedor reparte el ancho; Presionable solo da estilo a su interior. */}
       <View style={estilos.hueco}>
         {abreFicha ? (

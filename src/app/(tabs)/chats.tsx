@@ -56,7 +56,11 @@ export default function PantallaChats() {
         titulo="Aún no tienes chats"
         mensaje="Escribe a un amigo desde su ficha o crea un grupo: cada grupo tiene su chat.">
         <Boton titulo="Ver mis amigos" onPress={() => router.push('/amigos')} />
-        <Boton titulo="Ver mis grupos" variante="secundario" onPress={() => router.push('/grupos')} />
+        <Boton
+          titulo="Ver mis grupos"
+          variante="secundario"
+          onPress={() => router.push('/grupos')}
+        />
       </EstadoVacio>
     );
   } else {
@@ -135,7 +139,10 @@ export default function PantallaChats() {
           />
         ) : undefined
       }
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + ALTO_PESTANAS + espacio.l }}>
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingBottom: insets.bottom + ALTO_PESTANAS + espacio.l,
+      }}>
       <CabeceraCielo titulo="Chats" subtitulo="Tus amigos y tus grupos." />
       <View style={estilos.contenido}>{contenido}</View>
     </ScrollView>

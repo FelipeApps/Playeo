@@ -35,7 +35,11 @@ export default function PantallaInvitarAEvento() {
         escena="vacio"
         titulo="No queda nadie por invitar"
         mensaje="Todos tus amigos han respondido ya o tienen una invitación pendiente.">
-        <Boton titulo="Buscar amigos" variante="secundario" onPress={() => router.push('/amigos')} />
+        <Boton
+          titulo="Buscar amigos"
+          variante="secundario"
+          onPress={() => router.push('/amigos')}
+        />
       </EstadoVacio>
     );
   } else {

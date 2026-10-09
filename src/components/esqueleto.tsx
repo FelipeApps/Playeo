@@ -1,5 +1,11 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  type DimensionValue,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 
 import { espacio, radio, useTema } from '@/theme';

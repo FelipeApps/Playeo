@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -15,6 +15,9 @@ import { fuentes, useTema } from '@/theme';
 import { etiquetaNivel } from '@/utils/resumen';
 
 const CirculoAnimado = Animated.createAnimatedComponent(Circle);
+// La cifra es un TextInput no editable: es el único texto nativo cuyo contenido puede
+// cambiar desde el hilo de UI, sin un render de React por cada número.
+const CifraAnimada = Animated.createAnimatedComponent(TextInput);
 const SALIDA_SUAVE = Easing.bezier(0.23, 1, 0.32, 1);
 
 interface Props {
@@ -28,7 +31,10 @@ interface Props {
   sobreFoto?: boolean;
 }
 
-/** Anillo que se rellena hasta la puntuación al cargar. El color indica el tramo. */
+/**
+ * Anillo que se rellena hasta la puntuación mientras la cifra cuenta hasta su valor.
+ * El color indica el tramo. Con "reducir movimiento" aparece ya en su valor final.
+ */
 export function AnilloPuntuacion({
   valor,
   tamano = 60,
@@ -53,6 +59,11 @@ export function AnilloPuntuacion({
   const propsArco = useAnimatedProps(() => ({
     strokeDashoffset: perimetro * (1 - progreso.get() / 100),
   }));
+  const propsCifra = useAnimatedProps(() => {
+    const cifra = String(Math.round(progreso.get()));
+    // `text` no está en los tipos de TextInput, pero es la propiedad nativa que lo pinta.
+    return { text: cifra, defaultValue: cifra } as TextInputProps;
+  });
 
   const nivel = nivelPuntuacion(valor);
   const centro = tamano / 2;
@@ -87,15 +98,21 @@ export function AnilloPuntuacion({
           originY={centro}
         />
       </Svg>
-      <View style={[StyleSheet.absoluteFill, estilos.centro]}>
-        <Text
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, estilos.centro]}>
+        <CifraAnimada
+          // Si la animación no llegara a aplicarse, queda a la vista el valor real.
+          defaultValue={String(valor)}
+          animatedProps={propsCifra}
+          editable={false}
+          allowFontScaling={false}
+          underlineColorAndroid="transparent"
+          accessible={false}
+          importantForAccessibility="no"
           style={[
             estilos.cifra,
             { fontSize: tamano * 0.36, color: sobreFoto ? '#FFFFFF' : colores.texto },
           ]}
-          allowFontScaling={false}>
-          {valor}
-        </Text>
+        />
       </View>
     </View>
   );
@@ -103,5 +120,14 @@ export function AnilloPuntuacion({
 
 const estilos = StyleSheet.create({
   centro: { alignItems: 'center', justifyContent: 'center' },
-  cifra: { fontFamily: fuentes.titular, letterSpacing: -0.5 },
+  cifra: {
+    fontFamily: fuentes.titular,
+    letterSpacing: -0.5,
+    textAlign: 'center',
+    // Un TextInput trae relleno propio en Android; sin él, la cifra queda centrada.
+    padding: 0,
+    margin: 0,
+    includeFontPadding: false,
+    minWidth: '100%',
+  },
 });

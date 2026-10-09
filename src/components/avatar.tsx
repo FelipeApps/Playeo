@@ -20,7 +20,11 @@ export function Avatar({ ruta, nombre, tamano = 56 }: Props) {
 
   return (
     <View
-      style={[estilos.marco, forma, { backgroundColor: colores.arena, borderColor: colores.superficie }]}>
+      style={[
+        estilos.marco,
+        forma,
+        { backgroundColor: colores.arena, borderColor: colores.superficie },
+      ]}>
       {ruta && sesion ? (
         <Image
           // El bucket es privado: la foto se pide con la sesión del usuario.

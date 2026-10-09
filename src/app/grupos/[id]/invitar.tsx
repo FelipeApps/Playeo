@@ -35,7 +35,11 @@ export default function PantallaInvitarAGrupo() {
         escena="vacio"
         titulo="No queda nadie por invitar"
         mensaje="Todos tus amigos están ya en el grupo o tienen una invitación pendiente. Solo puedes invitar a tus amigos.">
-        <Boton titulo="Buscar amigos" variante="secundario" onPress={() => router.push('/amigos')} />
+        <Boton
+          titulo="Buscar amigos"
+          variante="secundario"
+          onPress={() => router.push('/amigos')}
+        />
       </EstadoVacio>
     );
   } else {

@@ -23,7 +23,11 @@ export default function PantallaVerificar() {
     setError(undefined);
     setAviso(undefined);
     setCargando(true);
-    const { error: fallo } = await supabase.auth.verifyOtp({ email: correo, token, type: 'signup' });
+    const { error: fallo } = await supabase.auth.verifyOtp({
+      email: correo,
+      token,
+      type: 'signup',
+    });
     setCargando(false);
 
     if (fallo) {

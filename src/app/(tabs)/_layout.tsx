@@ -23,12 +23,12 @@ export default function LayoutPestanas() {
       backgroundColor={colores.superficie}
       labelStyle={{ selected: { color: colores.texto } }}>
       <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Icon sf={{ default: 'sun.max', selected: 'sun.max.fill' }} md="wb_sunny" />
-        <NativeTabs.Trigger.Label>Hoy</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
+        <NativeTabs.Trigger.Label>Inicio</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="mapa">
-        <NativeTabs.Trigger.Icon sf={{ default: 'map', selected: 'map.fill' }} md="map" />
-        <NativeTabs.Trigger.Label>Mapa</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="explorar">
+        <NativeTabs.Trigger.Icon sf={{ default: 'safari', selected: 'safari.fill' }} md="explore" />
+        <NativeTabs.Trigger.Label>Explorar</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="quedadas">
         <NativeTabs.Trigger.Icon sf="calendar" md="event" />
@@ -36,12 +36,17 @@ export default function LayoutPestanas() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="chats">
         <NativeTabs.Trigger.Icon
-          sf={{ default: 'bubble.left.and.bubble.right', selected: 'bubble.left.and.bubble.right.fill' }}
+          sf={{
+            default: 'bubble.left.and.bubble.right',
+            selected: 'bubble.left.and.bubble.right.fill',
+          }}
           md="forum"
         />
         <NativeTabs.Trigger.Label>Chats</NativeTabs.Trigger.Label>
         {sinLeer > 0 ? (
-          <NativeTabs.Trigger.Badge>{sinLeer > 99 ? '99+' : String(sinLeer)}</NativeTabs.Trigger.Badge>
+          <NativeTabs.Trigger.Badge>
+            {sinLeer > 99 ? '99+' : String(sinLeer)}
+          </NativeTabs.Trigger.Badge>
         ) : null}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="perfil">

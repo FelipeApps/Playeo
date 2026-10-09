@@ -55,7 +55,11 @@ export function Ola({
             },
       ]}>
       <Svg width={ancho * 2} height={alto}>
-        <Path d={trazoOla(ancho, alto, amplitud, ciclos, fase)} fill={color} fillOpacity={opacidad} />
+        <Path
+          d={trazoOla(ancho, alto, amplitud, ciclos, fase)}
+          fill={color}
+          fillOpacity={opacidad}
+        />
       </Svg>
     </Animated.View>
   );

@@ -33,9 +33,7 @@ export function SeccionPreferencias() {
   const { preferencias, cambiar } = usePreferencias();
 
   return (
-    <Seccion
-      titulo="Tu playa ideal"
-      descripcion="Con esto se calcula la puntuación de cada playa.">
+    <Seccion titulo="Tu playa ideal" descripcion="Con esto se calcula la puntuación de cada playa.">
       <View style={estilos.ajuste}>
         <Texto variante="cuerpoFuerte">Qué plan buscas</Texto>
         <Segmentado

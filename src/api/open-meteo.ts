@@ -1,4 +1,9 @@
-import type { Playa } from '@/data/playas';
+/** Lo mínimo que hace falta de un sitio para pedir su tiempo. */
+export interface Punto {
+  id: string;
+  lat: number;
+  lon: number;
+}
 
 /**
  * Cliente de Open-Meteo (gratuito, sin clave). Tres APIs, una petición a cada una con
@@ -11,7 +16,8 @@ import type { Playa } from '@/data/playas';
 
 // 'auto' da las horas en la hora local de cada playa: Canarias, península, Azores...
 const ZONA_HORARIA = 'auto';
-const TIEMPO = 'temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,uv_index';
+const TIEMPO =
+  'temperature_2m,apparent_temperature,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,cloud_cover_low,visibility,uv_index';
 const MAR = 'wave_height,wave_period,sea_surface_temperature';
 const AIRE = 'dust,aerosol_optical_depth';
 
@@ -21,6 +27,16 @@ export interface Medicion {
   hora: string;
   /** °C */
   temperatura: number;
+  /** Sensación térmica, °C. */
+  sensacion: number;
+  /** Lluvia en la hora, mm. */
+  lluvia: number;
+  /** Probabilidad de lluvia, %. */
+  probLluvia: number;
+  /** % de cielo cubierto por nubes bajas: en el monte, las que tapan el camino. */
+  nubesBajas: number;
+  /** Visibilidad en metros, o `null` sin dato. */
+  visibilidad: number | null;
   /** km/h */
   viento: number;
   /** km/h */
@@ -64,7 +80,7 @@ interface Respuesta {
 
 async function pedir(
   base: string,
-  playas: Playa[],
+  playas: Punto[],
   variables: string,
   signal?: AbortSignal,
   soloActual = '',
@@ -93,6 +109,11 @@ function medicion(tiempo: Instante, mar: Instante, aire: Instante): Medicion {
   return {
     hora: String(tiempo.time ?? ''),
     temperatura: numero(tiempo.temperature_2m) ?? 0,
+    sensacion: numero(tiempo.apparent_temperature) ?? numero(tiempo.temperature_2m) ?? 0,
+    lluvia: numero(tiempo.precipitation) ?? 0,
+    probLluvia: numero(tiempo.precipitation_probability) ?? 0,
+    nubesBajas: numero(tiempo.cloud_cover_low) ?? 0,
+    visibilidad: numero(tiempo.visibility),
     viento: numero(tiempo.wind_speed_10m) ?? 0,
     rachas: numero(tiempo.wind_gusts_10m) ?? 0,
     direccionViento: numero(tiempo.wind_direction_10m) ?? 0,
@@ -114,12 +135,16 @@ function enHora(serie: Serie | undefined, indice: number): Instante {
 }
 
 export async function obtenerCondiciones(
-  playas: Playa[],
+  playas: Punto[],
   signal?: AbortSignal,
+  /** Falso para sitios de interior (rutas de monte): no se pide el estado del mar. */
+  conMar = true,
 ): Promise<Condiciones> {
   const [tiempo, mar, aire] = await Promise.all([
     pedir('https://api.open-meteo.com/v1/forecast', playas, TIEMPO, signal, ',is_day'),
-    pedir('https://marine-api.open-meteo.com/v1/marine', playas, MAR, signal),
+    conMar
+      ? pedir('https://marine-api.open-meteo.com/v1/marine', playas, MAR, signal)
+      : Promise.resolve([] as Respuesta[]),
     pedir('https://air-quality-api.open-meteo.com/v1/air-quality', playas, AIRE, signal),
   ]);
 
@@ -152,9 +177,10 @@ export async function obtenerCondiciones(
  * el aire, esas medidas llegan sin dato.
  */
 export async function obtenerPrevisionDia(
-  playa: Pick<Playa, 'lat' | 'lon'>,
+  playa: Pick<Punto, 'lat' | 'lon'>,
   momento: Date,
   signal?: AbortSignal,
+  conMar = true,
 ): Promise<Medicion[]> {
   const dia = (fecha: Date) => fecha.toISOString().slice(0, 10);
   const siguiente = new Date(momento.getTime() + 24 * 60 * 60 * 1000);
@@ -169,7 +195,9 @@ export async function obtenerPrevisionDia(
 
   const [tiempo, mar, aire] = await Promise.allSettled([
     pedirSerie('https://api.open-meteo.com/v1/forecast', TIEMPO),
-    pedirSerie('https://marine-api.open-meteo.com/v1/marine', MAR),
+    conMar
+      ? pedirSerie('https://marine-api.open-meteo.com/v1/marine', MAR)
+      : Promise.resolve({} as Serie),
     pedirSerie('https://air-quality-api.open-meteo.com/v1/air-quality', AIRE),
   ]);
   if (tiempo.status === 'rejected') throw tiempo.reason;

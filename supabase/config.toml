@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "playeo"
+project_id = "planeo"
 
 [api]
 enabled = true
@@ -157,7 +157,7 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "playeo://"
+site_url = "planeo://"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
@@ -244,14 +244,14 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Playeo verifica el correo con un código de 6 dígitos que se escribe en la app,
+# Planeo verifica el correo con un código de 6 dígitos que se escribe en la app,
 # no con un enlace: los enlaces de vuelta a la app no son fiables en Expo Go.
 [auth.email.template.confirmation]
-subject = "Tu código de Playeo"
+subject = "Tu código de Planeo"
 content_path = "./supabase/templates/confirmacion.html"
 
 [auth.email.template.recovery]
-subject = "Código para cambiar tu contraseña de Playeo"
+subject = "Código para cambiar tu contraseña de Planeo"
 content_path = "./supabase/templates/recuperacion.html"
 
 # Uncomment to customize email template
@@ -345,11 +345,11 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
-# Google queda declarado pero apagado. Para activarlo: crear las credenciales OAuth,
-# poner enabled = true y definir las variables de entorno. El perfil se crea igual
-# para cualquier proveedor (ver el trigger private.crear_perfil).
+# Inicio de sesión con Google. Las credenciales (cliente OAuth de tipo "Aplicación web")
+# se leen de supabase/.env, que no se sube al repositorio; ver supabase/.env.example.
+# El perfil se crea igual para cualquier proveedor (ver el trigger private.crear_perfil).
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 skip_nonce_check = false

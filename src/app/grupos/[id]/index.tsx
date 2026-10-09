@@ -92,7 +92,8 @@ export default function PantallaGrupo() {
       {
         text: 'Expulsar del grupo',
         style: 'destructive',
-        onPress: () => quitarMiembro.mutate({ grupo: id, usuario: miembro.id }, { onError: avisar }),
+        onPress: () =>
+          quitarMiembro.mutate({ grupo: id, usuario: miembro.id }, { onError: avisar }),
       },
       { text: 'Cancelar', style: 'cancel' },
     ]);

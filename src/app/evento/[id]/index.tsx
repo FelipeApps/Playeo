@@ -12,6 +12,7 @@ import { Esqueleto } from '@/components/esqueleto';
 import { EstadoVacio } from '@/components/estado-vacio';
 import { FilaUsuario } from '@/components/fila-usuario';
 import { FotoPlaya } from '@/components/foto-playa';
+import { Icono } from '@/components/icono';
 import { CIELO_ALTO } from '@/components/ilustracion-playa';
 import { PantallaFormulario } from '@/components/pantalla-formulario';
 import { useBarraEstado } from '@/components/pantalla';
@@ -19,6 +20,7 @@ import { Presionable } from '@/components/presionable';
 import { PrevisionHoras } from '@/components/prevision-horas';
 import { Segmentado } from '@/components/segmentado';
 import { Texto } from '@/components/texto';
+import { buscarActividad } from '@/data/actividades';
 import { buscarPlaya } from '@/data/playas';
 import { mensajeDeError } from '@/lib/supabase';
 import { useSesion } from '@/sesion/contexto';
@@ -33,7 +35,6 @@ import {
   type Respuesta,
 } from '@/social/eventos';
 import { espacio, fuentes, radio, sombra, useTema } from '@/theme';
-import { resumen } from '@/utils/resumen';
 
 const ALTO_FOTO = 300;
 const RESPUESTAS: { valor: Respuesta; etiqueta: string }[] = [
@@ -52,7 +53,7 @@ export default function PantallaEvento() {
   const { sesion } = useSesion();
   const { data: evento, isPending, isError } = useEvento(id);
   const asistentes = useAsistentes(id);
-  const prevision = usePrevisionEvento(evento?.playa_id, evento?.empieza);
+  const prevision = usePrevisionEvento(evento);
   const { responder, eliminar } = useAccionesEvento();
   useBarraEstado('clara');
 
@@ -78,13 +79,18 @@ export default function PantallaEvento() {
     );
   }
 
-  const playa = buscarPlaya(evento.playa_id);
+  const actividad = buscarActividad(evento.actividad_id);
+  const esManual = evento.tipo_sitio === 'manual';
+  const playa =
+    evento.actividad_id === 'playa' && evento.lugar_id ? buscarPlaya(evento.lugar_id) : undefined;
   const soyCreador = evento.creador_id === sesion?.user.id;
+  const dentro = soyCreador || evento.mi_respuesta === 'voy' || evento.mi_respuesta === 'quiza';
   const marco = { backgroundColor: colores.superficie, borderColor: colores.borde };
   const avisar = (fallo: unknown) => Alert.alert('No se pudo completar', mensajeDeError(fallo));
   const completo = evento.plazas_maximas != null && evento.van >= evento.plazas_maximas;
   const van = asistentes.data?.filter((persona) => persona.respuesta === 'voy') ?? [];
   const quiza = asistentes.data?.filter((persona) => persona.respuesta === 'quiza') ?? [];
+  const totalEnElMomento = prevision.horas.find((hora) => hora.destacada)?.total;
 
   const disponibleDesde = new Date(
     new Date(evento.empieza).getTime() - DIAS_DE_PREVISION * 24 * 60 * 60 * 1000,
@@ -100,24 +106,43 @@ export default function PantallaEvento() {
       },
     ]);
 
+  const abrirEnMapas = () => {
+    // Con la dirección exacta si la puedo ver; si no, con el nombre del sitio.
+    const destino = evento.ubicacion_direccion ?? evento.lugar_nombre;
+    Linking.openURL(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destino)}`,
+    ).catch(avisar);
+  };
+
   return (
     <View style={[estilos.pantalla, { backgroundColor: colores.fondo }]}>
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + espacio.xl }}>
         <View style={estilos.foto}>
           {playa ? (
             <FotoPlaya playa={playa} proporcion={1.3} style={StyleSheet.absoluteFill} />
-          ) : null}
+          ) : (
+            // Sin foto del lugar: el icono de la actividad sobre el cielo.
+            <View style={[StyleSheet.absoluteFill, estilos.sinFoto]}>
+              <Icono nombre={actividad.icono} tamano={120} color="rgba(255,255,255,0.22)" />
+            </View>
+          )}
           <LinearGradient
             colors={['rgba(4,20,30,0.5)', 'rgba(4,20,30,0.05)', 'rgba(4,20,30,0.88)']}
             locations={[0, 0.35, 1]}
             style={StyleSheet.absoluteFill}
           />
           <View style={estilos.sobreFoto}>
-            <Text style={estilos.cuando}>{cuando(evento.empieza)}</Text>
+            <View style={[estilos.sello, { backgroundColor: colores.solFijo }]}>
+              <Icono nombre={actividad.icono} tamano={16} color={colores.sobreSol} />
+              <Text style={[estilos.textoSello, { color: colores.sobreSol }]}>
+                {evento.actividad_nombre}
+              </Text>
+            </View>
             <Text style={estilos.titulo} accessibilityRole="header">
               {evento.titulo}
             </Text>
-            <Text style={estilos.donde}>{evento.playa_nombre}</Text>
+            <Text style={estilos.cuando}>{cuando(evento.empieza)}</Text>
+            <Text style={estilos.donde}>{evento.lugar_nombre}</Text>
           </View>
         </View>
 
@@ -160,7 +185,9 @@ export default function PantallaEvento() {
             ) : null}
           </View>
 
-          {evento.descripcion ? <Texto style={estilos.descripcion}>{evento.descripcion}</Texto> : null}
+          {evento.descripcion ? (
+            <Texto style={estilos.descripcion}>{evento.descripcion}</Texto>
+          ) : null}
 
           {evento.conversacion_id || evento.enlace_whatsapp ? (
             <View style={estilos.bloque}>
@@ -182,51 +209,85 @@ export default function PantallaEvento() {
                   accessibilityRole="link"
                   accessibilityHint="Abre WhatsApp con la invitación al grupo"
                   onPress={() => {
-                    if (evento.enlace_whatsapp) Linking.openURL(evento.enlace_whatsapp).catch(avisar);
+                    if (evento.enlace_whatsapp) {
+                      Linking.openURL(evento.enlace_whatsapp).catch(avisar);
+                    }
                   }}
                 />
               ) : null}
             </View>
           ) : null}
 
+          {/* Dónde: según el sitio sea escrito a mano o un lugar del catálogo. */}
           <View style={estilos.bloque}>
             <Texto variante="titulo" accessibilityRole="header">
-              Cómo estará la playa
+              Dónde
             </Texto>
-            {prevision.consulta.isPending ? (
-              <Esqueleto alto={150} redondeo={radio.l} />
-            ) : prevision.enElMomento ? (
-              <>
-                <View style={[estilos.tarjeta, estilos.enFila, sombra(esOscuro), marco]}>
-                  <AnilloPuntuacion
-                    valor={prevision.horas.find((hora) => hora.destacada)?.total ?? 0}
-                    tamano={64}
-                    grosor={6}
-                  />
-                  <Text style={[estilos.frase, { color: colores.texto }]}>
-                    {resumen(prevision.enElMomento, prevision.resguardada ?? false, true)}.
-                  </Text>
-                </View>
-                <PrevisionHoras horas={prevision.horas} />
-                <Texto variante="etiqueta" color="textoSecundario">
-                  Previsión de Open-Meteo, puntuada según tus preferencias. Puede cambiar.
-                </Texto>
-              </>
-            ) : (
-              <Texto color="textoSecundario">
-                {disponibleDesde > new Date()
-                  ? `Aún es pronto para saberlo. La previsión estará disponible a partir del ${cuando(disponibleDesde).split(',').slice(0, 2).join(',')}.`
-                  : 'No hay previsión para ese momento.'}
-              </Texto>
-            )}
-            {playa ? (
+            <View style={[estilos.tarjeta, sombra(esOscuro), marco]}>
+              <Texto variante="subtitulo">{evento.lugar_nombre}</Texto>
+              {esManual ? (
+                evento.ubicacion_direccion ? (
+                  <Texto>{evento.ubicacion_direccion}</Texto>
+                ) : dentro ? null : (
+                  <Texto variante="detalle" color="textoSecundario">
+                    La dirección exacta se ve al apuntarse.
+                  </Texto>
+                )
+              ) : null}
+            </View>
+            {esManual ? (
+              <Boton
+                titulo="Buscar en el mapa"
+                variante="secundario"
+                accessibilityRole="link"
+                onPress={abrirEnMapas}
+              />
+            ) : playa ? (
               <Boton
                 titulo="Ver la playa"
                 variante="secundario"
                 onPress={() => router.push({ pathname: '/playa/[id]', params: { id: playa.id } })}
               />
+            ) : evento.lugar_id ? (
+              <Boton
+                titulo="Ver el lugar"
+                variante="secundario"
+                onPress={() =>
+                  router.push({ pathname: '/lugar/[id]', params: { id: evento.lugar_id ?? '' } })
+                }
+              />
             ) : null}
           </View>
+
+          {prevision.tienePrevision ? (
+            <View style={estilos.bloque}>
+              <Texto variante="titulo" accessibilityRole="header">
+                Cómo estará
+              </Texto>
+              {prevision.consulta.isPending ? (
+                <Esqueleto alto={150} redondeo={radio.l} />
+              ) : prevision.frase ? (
+                <>
+                  <View style={[estilos.tarjeta, estilos.enFila, sombra(esOscuro), marco]}>
+                    <AnilloPuntuacion valor={totalEnElMomento ?? 0} tamano={64} grosor={6} />
+                    <Text style={[estilos.frase, { color: colores.texto }]}>
+                      {prevision.frase}.
+                    </Text>
+                  </View>
+                  <PrevisionHoras horas={prevision.horas} />
+                  <Texto variante="etiqueta" color="textoSecundario">
+                    Previsión de Open-Meteo, puntuada según tus preferencias. Puede cambiar.
+                  </Texto>
+                </>
+              ) : (
+                <Texto color="textoSecundario">
+                  {disponibleDesde > new Date()
+                    ? `Aún es pronto para saberlo. La previsión estará disponible a partir del ${cuando(disponibleDesde).split(',').slice(0, 2).join(',')}.`
+                    : 'No hay previsión para ese momento.'}
+                </Texto>
+              )}
+            </View>
+          ) : null}
 
           <View style={estilos.bloque}>
             <Texto variante="titulo" accessibilityRole="header">
@@ -239,7 +300,7 @@ export default function PantallaEvento() {
                 {van.map((persona) => (
                   <FilaUsuario key={persona.id} usuario={persona}>
                     {persona.id === evento.creador_id ? (
-                      <View style={[estilos.sello, { backgroundColor: colores.arena }]}>
+                      <View style={[estilos.organiza, { backgroundColor: colores.arena }]}>
                         <Texto variante="etiqueta" color="sobreArena">
                           Organiza
                         </Texto>
@@ -264,12 +325,19 @@ export default function PantallaEvento() {
           </View>
 
           {soyCreador ? (
-            <Boton
-              titulo="Cancelar la quedada"
-              variante="peligro"
-              onPress={confirmarEliminar}
-              cargando={eliminar.isPending}
-            />
+            <View style={estilos.bloque}>
+              <Boton
+                titulo="Editar la quedada"
+                variante="secundario"
+                onPress={() => router.push({ pathname: '/evento/[id]/editar', params: { id } })}
+              />
+              <Boton
+                titulo="Cancelar la quedada"
+                variante="peligro"
+                onPress={confirmarEliminar}
+                cargando={eliminar.isPending}
+              />
+            </View>
           ) : (
             <Boton
               titulo="Reportar a quien organiza"
@@ -300,8 +368,19 @@ export default function PantallaEvento() {
 const estilos = StyleSheet.create({
   pantalla: { flex: 1 },
   foto: { height: ALTO_FOTO, justifyContent: 'flex-end', backgroundColor: CIELO_ALTO },
+  sinFoto: { alignItems: 'flex-end', justifyContent: 'center', paddingRight: espacio.l },
   sobreFoto: { padding: espacio.m, paddingBottom: espacio.l, gap: espacio.xxs },
-  cuando: { fontFamily: fuentes.textoFuerte, fontSize: 15, lineHeight: 20, color: '#FFD23F' },
+  sello: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: espacio.xxs + 2,
+    paddingHorizontal: espacio.s,
+    paddingVertical: 5,
+    borderRadius: radio.completo,
+    marginBottom: espacio.xxs,
+  },
+  textoSello: { fontFamily: fuentes.textoFuerte, fontSize: 13, lineHeight: 17 },
   titulo: {
     fontFamily: fuentes.titular,
     fontSize: 32,
@@ -309,6 +388,7 @@ const estilos = StyleSheet.create({
     letterSpacing: -0.7,
     color: '#FFFFFF',
   },
+  cuando: { fontFamily: fuentes.textoFuerte, fontSize: 15, lineHeight: 20, color: '#FFD23F' },
   donde: { fontFamily: fuentes.textoMedio, fontSize: 16, lineHeight: 22, color: '#E3EEF3' },
   volver: {
     position: 'absolute',
@@ -339,7 +419,7 @@ const estilos = StyleSheet.create({
   frase: { flex: 1, fontFamily: fuentes.textoMedio, fontSize: 17, lineHeight: 24 },
   descripcion: { fontSize: 17, lineHeight: 27 },
   bloque: { gap: espacio.s },
-  sello: {
+  organiza: {
     alignSelf: 'center',
     paddingHorizontal: espacio.s,
     paddingVertical: 4,

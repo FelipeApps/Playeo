@@ -12,8 +12,10 @@ export interface HoraPrevista {
   total: number;
   /** km/h */
   viento: number;
-  /** Altura de ola en la orilla, en metros. */
-  ola: number | null;
+  /** Altura de ola en la orilla, en metros. En el monte no se indica. */
+  ola?: number | null;
+  /** Probabilidad de lluvia, %. Para el monte, en lugar de la ola. */
+  lluvia?: number;
   /** Para destacar la hora actual o la del evento. */
   destacada?: boolean;
 }
@@ -32,7 +34,7 @@ export function PrevisionHoras({ horas }: { horas: HoraPrevista[] }) {
         <View
           key={prevista.hora}
           accessible
-          accessibilityLabel={`A las ${prevista.hora}: puntuación ${prevista.total}, viento ${Math.round(prevista.viento)} kilómetros por hora${prevista.ola == null ? '' : `, ola de ${decimal(prevista.ola)} metros`}`}
+          accessibilityLabel={`A las ${prevista.hora}: puntuación ${prevista.total}, viento ${Math.round(prevista.viento)} kilómetros por hora${prevista.ola == null ? '' : `, ola de ${decimal(prevista.ola)} metros`}${prevista.lluvia == null ? '' : `, ${Math.round(prevista.lluvia)} por ciento de probabilidad de lluvia`}`}
           style={[
             estilos.celda,
             {
@@ -49,10 +51,19 @@ export function PrevisionHoras({ horas }: { horas: HoraPrevista[] }) {
             <Icono nombre="viento" tamano={14} color={colores.primario} />
             <Texto variante="etiqueta">{Math.round(prevista.viento)}</Texto>
           </View>
-          <View style={estilos.dato}>
-            <Icono nombre="ola" tamano={14} color={colores.primario} />
-            <Texto variante="etiqueta">{prevista.ola == null ? '–' : decimal(prevista.ola)}</Texto>
-          </View>
+          {prevista.lluvia == null ? (
+            <View style={estilos.dato}>
+              <Icono nombre="ola" tamano={14} color={colores.primario} />
+              <Texto variante="etiqueta">
+                {prevista.ola == null ? '–' : decimal(prevista.ola)}
+              </Texto>
+            </View>
+          ) : (
+            <View style={estilos.dato}>
+              <Icono nombre="lluvia" tamano={14} color={colores.primario} />
+              <Texto variante="etiqueta">{Math.round(prevista.lluvia)} %</Texto>
+            </View>
+          )}
         </View>
       ))}
     </ScrollView>

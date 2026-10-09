@@ -9,7 +9,7 @@ import type { Playa } from '@/data/playas';
  * Wikimedia rechaza (403) las peticiones sin un User-Agent que identifique a la app,
  * como el que envía Android por defecto.
  */
-const CABECERAS = { 'User-Agent': 'Playeo/0.1 (prototipo Expo; playas de Gran Canaria)' };
+const CABECERAS = { 'User-Agent': 'Planeo/0.1 (prototipo Expo; playas de Gran Canaria)' };
 
 interface Props {
   playa: Playa;

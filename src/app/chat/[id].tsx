@@ -148,7 +148,10 @@ export default function PantallaChat() {
           <Text
             style={[
               estilos.hora,
-              { color: mio ? colores.sobrePrimario : colores.textoSecundario, opacity: mio ? 0.8 : 1 },
+              {
+                color: mio ? colores.sobrePrimario : colores.textoSecundario,
+                opacity: mio ? 0.8 : 1,
+              },
             ]}>
             {momentoCorto(item.creado)}
           </Text>
@@ -299,7 +302,13 @@ const estilos = StyleSheet.create({
   hora: { fontFamily: fuentes.textoMedio, fontSize: 11, alignSelf: 'flex-end' },
   leido: { marginTop: 2, marginRight: espacio.xxs },
   // La lista está invertida: el vacío también, así que se le da la vuelta para leerlo.
-  vacio: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: espacio.xl, transform: [{ scaleY: -1 }] },
+  vacio: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: espacio.xl,
+    transform: [{ scaleY: -1 }],
+  },
   centrado: { textAlign: 'center' },
   redaccion: {
     flexDirection: 'row',
@@ -314,8 +323,9 @@ const estilos = StyleSheet.create({
     minHeight: 48,
     maxHeight: 130,
     paddingHorizontal: espacio.m,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingTop: 13,
+    paddingBottom: 11,
+    textAlignVertical: 'center',
     borderRadius: radio.l,
     borderWidth: 1,
     fontFamily: fuentes.texto,

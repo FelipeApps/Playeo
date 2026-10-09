@@ -23,7 +23,21 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "amistades": {
+            "actividades": {
+                  Row: {
+                    "id": string,"nombre": string,"orden": number,"tipo_sitio": Database["public"]['Enums']["tipo_sitio"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id": string,"nombre": string,"orden": number,"tipo_sitio": Database["public"]['Enums']["tipo_sitio"]
+                  }
+                  Update: {
+                    "id"?: string,"nombre"?: string,"orden"?: number,"tipo_sitio"?: Database["public"]['Enums']["tipo_sitio"]
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"amistades": {
                   Row: {
                     "creada": string,"destinatario_id": string,"estado": Database["public"]['Enums']["estado_amistad"],"respondida": string | null,"solicitante_id": string
                   }
@@ -129,17 +143,23 @@ isOneToOne: true
                   ]
                 },"eventos": {
                   Row: {
-                    "actualizado": string,"creado": string,"creador_id": string,"descripcion": string | null,"empieza": string,"enlace_whatsapp": string | null,"grupo_id": string | null,"id": string,"playa_id": string,"plazas_maximas": number | null,"titulo": string,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
+                    "actividad_id": string,"actividad_otra": string | null,"actualizado": string,"creado": string,"creador_id": string,"descripcion": string | null,"empieza": string,"enlace_whatsapp": string | null,"grupo_id": string | null,"id": string,"lugar_id": string | null,"plazas_maximas": number | null,"region": string | null,"titulo": string,"ubicacion_direccion": string | null,"ubicacion_nombre": string | null,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "actualizado"?: string,"creado"?: string,"creador_id": string,"descripcion"?: string | null,"empieza": string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"playa_id": string,"plazas_maximas"?: number | null,"titulo": string,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
+                    "actividad_id"?: string,"actividad_otra"?: string | null,"actualizado"?: string,"creado"?: string,"creador_id": string,"descripcion"?: string | null,"empieza": string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"lugar_id"?: string | null,"plazas_maximas"?: number | null,"region"?: string | null,"titulo": string,"ubicacion_direccion"?: string | null,"ubicacion_nombre"?: string | null,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
                   }
                   Update: {
-                    "actualizado"?: string,"creado"?: string,"creador_id"?: string,"descripcion"?: string | null,"empieza"?: string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"playa_id"?: string,"plazas_maximas"?: number | null,"titulo"?: string,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
+                    "actividad_id"?: string,"actividad_otra"?: string | null,"actualizado"?: string,"creado"?: string,"creador_id"?: string,"descripcion"?: string | null,"empieza"?: string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"lugar_id"?: string | null,"plazas_maximas"?: number | null,"region"?: string | null,"titulo"?: string,"ubicacion_direccion"?: string | null,"ubicacion_nombre"?: string | null,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
                   }
                   Relationships: [
                     {
+      foreignKeyName: "eventos_actividad_id_fkey"
+      columns: ["actividad_id"]
+isOneToOne: false
+      referencedRelation: "actividades"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "eventos_creador_id_fkey"
       columns: ["creador_id"]
 isOneToOne: false
@@ -152,10 +172,10 @@ isOneToOne: false
       referencedRelation: "grupos"
       referencedColumns: ["id"]
     },{
-      foreignKeyName: "eventos_playa_id_fkey"
-      columns: ["playa_id"]
+      foreignKeyName: "eventos_lugar_id_fkey"
+      columns: ["lugar_id"]
 isOneToOne: false
-      referencedRelation: "playas"
+      referencedRelation: "lugares"
       referencedColumns: ["id"]
     }
                   ]
@@ -240,6 +260,26 @@ isOneToOne: false
       columns: ["invitador_id"]
 isOneToOne: false
       referencedRelation: "perfiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lugares": {
+                  Row: {
+                    "actividad_id": string,"datos": NonNullable<Json>,"id": string,"lat": number | null,"lon": number | null,"nombre": string,"region": string,"tipo": Database["public"]['Enums']["tipo_lugar"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actividad_id"?: string,"datos"?: NonNullable<Json>,"id": string,"lat"?: number | null,"lon"?: number | null,"nombre": string,"region": string,"tipo"?: Database["public"]['Enums']["tipo_lugar"]
+                  }
+                  Update: {
+                    "actividad_id"?: string,"datos"?: NonNullable<Json>,"id"?: string,"lat"?: number | null,"lon"?: number | null,"nombre"?: string,"region"?: string,"tipo"?: Database["public"]['Enums']["tipo_lugar"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lugares_actividad_id_fkey"
+      columns: ["actividad_id"]
+isOneToOne: false
+      referencedRelation: "actividades"
       referencedColumns: ["id"]
     }
                   ]
@@ -361,20 +401,6 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"playas": {
-                  Row: {
-                    "id": string,"nombre": string,"region": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "id": string,"nombre": string,"region": string
-                  }
-                  Update: {
-                    "id"?: string,"nombre"?: string,"region"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
                 },"reportes": {
                   Row: {
                     "contenido": string | null,"creado": string,"detalles": string | null,"estado": Database["public"]['Enums']["estado_reporte"],"id": number,"mensaje_id": number | null,"motivo": Database["public"]['Enums']["motivo_reporte"],"reportante_id": string | null,"usuario_reportado_id": string | null
@@ -467,12 +493,12 @@ isOneToOne: false
                            },
 "detalle_evento":
 { Args: { "evento": string }; Returns: {
-              "conversacion_id": string,"creador_foto": string,"creador_id": string,"creador_nombre": string,"creador_usuario": string,"descripcion": string,"empieza": string,"enlace_whatsapp": string,"grupo_id": string,"grupo_nombre": string,"id": string,"me_han_invitado": boolean,"mi_respuesta": Database["public"]['Enums']["respuesta_evento"],"playa_id": string,"playa_nombre": string,"plazas_maximas": number,"titulo": string,"van": number,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
+              "actividad_id": string,"actividad_nombre": string,"conversacion_id": string,"creador_foto": string,"creador_id": string,"creador_nombre": string,"creador_usuario": string,"descripcion": string,"empieza": string,"enlace_whatsapp": string,"grupo_id": string,"grupo_nombre": string,"id": string,"lugar_id": string,"lugar_nombre": string,"me_han_invitado": boolean,"mi_respuesta": Database["public"]['Enums']["respuesta_evento"],"plazas_maximas": number,"region": string,"tipo_sitio": Database["public"]['Enums']["tipo_sitio"],"titulo": string,"ubicacion_direccion": string,"van": number,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
             }[]
                            },
 "eventos_visibles":
 { Args: { "region"?: string }; Returns: {
-              "creador_id": string,"creador_nombre": string,"empieza": string,"grupo_nombre": string,"id": string,"me_han_invitado": boolean,"mi_respuesta": Database["public"]['Enums']["respuesta_evento"],"playa_id": string,"playa_nombre": string,"plazas_maximas": number,"titulo": string,"van": number,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
+              "actividad_id": string,"actividad_nombre": string,"creador_id": string,"creador_nombre": string,"empieza": string,"grupo_nombre": string,"id": string,"lugar_id": string,"lugar_nombre": string,"me_han_invitado": boolean,"mi_respuesta": Database["public"]['Enums']["respuesta_evento"],"plazas_maximas": number,"titulo": string,"van": number,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
             }[]
                            },
 "exportar_mis_datos":
@@ -516,6 +542,9 @@ isOneToOne: false
               "desde": string,"id": string,"nombre_usuario": string,"nombre_visible": string,"relacion": Database["public"]['Enums']["relacion_usuario"],"ruta_foto": string
             }[]
                            },
+"moderar_borrar_mensaje":
+{ Args: { "reporte": number }; Returns: undefined
+                           },
 "nombre_usuario_disponible":
 { Args: { "nombre": string }; Returns: boolean
                            },
@@ -527,6 +556,14 @@ isOneToOne: false
 "registrar_token_push":
 { Args: { "plataforma": string,"token": string }; Returns: undefined
                            },
+"reportes_para_moderar":
+{ Args: { "solo_abiertos"?: boolean }; Returns: {
+              "contenido": string,"creado": string,"detalles": string,"estado": Database["public"]['Enums']["estado_reporte"],"id": number,"mensaje_existe": boolean,"mensaje_id": number,"motivo": Database["public"]['Enums']["motivo_reporte"],"reportado_id": string,"reportado_nombre": string,"reportado_usuario": string,"reportante_nombre": string,"reportes_previos": number
+            }[]
+                           },
+"soy_moderador":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "ver_usuario":
 { Args: { "usuario": string }; Returns: {
               "bio": string,"id": string,"nombre_usuario": string,"nombre_visible": string,"perfil_visible": boolean,"relacion": Database["public"]['Enums']["relacion_usuario"],"ruta_foto": string,"zona": string
@@ -534,7 +571,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "estado_amistad": "pendiente"|"aceptada","estado_reporte": "abierto"|"revisado"|"cerrado","motivo_reporte": "spam"|"acoso"|"contenido_inapropiado"|"suplantacion"|"otro","privacidad_perfil": "publico"|"amigos","relacion_usuario": "yo"|"ninguna"|"amigo"|"solicitud_enviada"|"solicitud_recibida"|"bloqueado","respuesta_evento": "voy"|"quiza"|"no_voy","rol_grupo": "admin"|"miembro","tipo_conversacion": "directa"|"grupo"|"evento","tipo_notificacion": "solicitud_amistad"|"amistad_aceptada"|"invitacion_grupo"|"invitacion_evento"|"mensaje_nuevo","visibilidad_evento": "amigos"|"grupo"|"publico"
+            "estado_amistad": "pendiente"|"aceptada","estado_reporte": "abierto"|"revisado"|"cerrado","motivo_reporte": "spam"|"acoso"|"contenido_inapropiado"|"suplantacion"|"otro","privacidad_perfil": "publico"|"amigos","relacion_usuario": "yo"|"ninguna"|"amigo"|"solicitud_enviada"|"solicitud_recibida"|"bloqueado","respuesta_evento": "voy"|"quiza"|"no_voy","rol_grupo": "admin"|"miembro","tipo_conversacion": "directa"|"grupo"|"evento","tipo_lugar": "playa"|"ruta"|"cancha","tipo_notificacion": "solicitud_amistad"|"amistad_aceptada"|"invitacion_grupo"|"invitacion_evento"|"mensaje_nuevo","tipo_sitio": "catalogo_con_estado"|"catalogo"|"manual","visibilidad_evento": "amigos"|"grupo"|"publico"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -654,7 +691,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "estado_amistad": ["pendiente", "aceptada"],"estado_reporte": ["abierto", "revisado", "cerrado"],"motivo_reporte": ["spam", "acoso", "contenido_inapropiado", "suplantacion", "otro"],"privacidad_perfil": ["publico", "amigos"],"relacion_usuario": ["yo", "ninguna", "amigo", "solicitud_enviada", "solicitud_recibida", "bloqueado"],"respuesta_evento": ["voy", "quiza", "no_voy"],"rol_grupo": ["admin", "miembro"],"tipo_conversacion": ["directa", "grupo", "evento"],"tipo_notificacion": ["solicitud_amistad", "amistad_aceptada", "invitacion_grupo", "invitacion_evento", "mensaje_nuevo"],"visibilidad_evento": ["amigos", "grupo", "publico"]
+            "estado_amistad": ["pendiente", "aceptada"],"estado_reporte": ["abierto", "revisado", "cerrado"],"motivo_reporte": ["spam", "acoso", "contenido_inapropiado", "suplantacion", "otro"],"privacidad_perfil": ["publico", "amigos"],"relacion_usuario": ["yo", "ninguna", "amigo", "solicitud_enviada", "solicitud_recibida", "bloqueado"],"respuesta_evento": ["voy", "quiza", "no_voy"],"rol_grupo": ["admin", "miembro"],"tipo_conversacion": ["directa", "grupo", "evento"],"tipo_lugar": ["playa", "ruta", "cancha"],"tipo_notificacion": ["solicitud_amistad", "amistad_aceptada", "invitacion_grupo", "invitacion_evento", "mensaje_nuevo"],"tipo_sitio": ["catalogo_con_estado", "catalogo", "manual"],"visibilidad_evento": ["amigos", "grupo", "publico"]
           }
         }
 } as const

@@ -1,11 +1,7 @@
 import { BlurView } from 'expo-blur';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, {
-  interpolate,
-  useAnimatedStyle,
-  type SharedValue,
-} from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { espacio } from '@/theme';

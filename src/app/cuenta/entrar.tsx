@@ -6,6 +6,7 @@ import { CampoTexto } from '@/components/campo-texto';
 import { PantallaFormulario } from '@/components/pantalla-formulario';
 import { Texto } from '@/components/texto';
 import { mensajeDeError, supabase } from '@/lib/supabase';
+import { BotonGoogle } from '@/sesion/google';
 
 export default function PantallaEntrar() {
   const [correo, setCorreo] = useState('');
@@ -59,6 +60,14 @@ export default function PantallaEntrar() {
         onPress={entrar}
         cargando={cargando}
         deshabilitado={!correo.includes('@') || clave.length === 0}
+      />
+      <BotonGoogle />
+      <Boton
+        titulo="He olvidado mi contraseña"
+        variante="secundario"
+        onPress={() =>
+          router.push({ pathname: '/cuenta/recuperar', params: { correo: correo.trim() } })
+        }
       />
       <Texto variante="detalle" color="textoSecundario" style={{ textAlign: 'center' }}>
         ¿Aún no tienes cuenta?

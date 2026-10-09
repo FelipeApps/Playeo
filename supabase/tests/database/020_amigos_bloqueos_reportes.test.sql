@@ -172,11 +172,12 @@ select throws_ok(
   null,
   'No se puede reportar en nombre de otra persona'
 );
-select throws_ok(
-  $$ update public.reportes set estado = 'cerrado' $$,
-  '42501',
-  null,
-  'Nadie puede cambiar el estado de un reporte desde la app'
+update public.reportes set estado = 'cerrado';
+select tests.salir();
+select is(
+  (select estado from public.reportes where reportante_id = tests.id_de('ana')),
+  'abierto'::public.estado_reporte,
+  'Quien no modera no puede cambiar el estado de un reporte, ni del suyo'
 );
 select tests.entrar_como('carla');
 select is(

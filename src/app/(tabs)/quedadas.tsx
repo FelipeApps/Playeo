@@ -105,7 +105,10 @@ export default function PantallaQuedadas() {
           />
         ) : undefined
       }
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + ALTO_PESTANAS + espacio.l }}>
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingBottom: insets.bottom + ALTO_PESTANAS + espacio.l,
+      }}>
       <CabeceraCielo titulo="Quedadas" subtitulo="Planes de playa con tu gente." />
       <View style={estilos.contenido}>{contenido}</View>
     </ScrollView>

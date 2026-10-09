@@ -7,7 +7,7 @@
 // características (socorrista, surf...) que Wikidata no tiene.
 import { writeFileSync } from 'node:fs';
 
-const AGENTE = { 'User-Agent': 'Playeo/0.1 (prototipo Expo; catalogo de playas)' };
+const AGENTE = { 'User-Agent': 'Planeo/0.1 (prototipo Expo; catalogo de playas)' };
 const PLAYAS_POR_ZONA = 15;
 /** Candidatas que se comprueban contra la API marina para quedarse con PLAYAS_POR_ZONA. */
 const CANDIDATAS_POR_ZONA = 30;
@@ -47,7 +47,10 @@ const PAISES = { ES: 'Q29', PT: 'Q45' };
 
 async function json(url, opciones = {}) {
   for (let intento = 1; ; intento++) {
-    const respuesta = await fetch(url, { ...opciones, headers: { ...AGENTE, ...opciones.headers } });
+    const respuesta = await fetch(url, {
+      ...opciones,
+      headers: { ...AGENTE, ...opciones.headers },
+    });
     if (respuesta.ok) return respuesta.json();
     if (intento === 5) throw new Error(`${respuesta.status} en ${url.slice(0, 90)}`);
     await new Promise((listo) => setTimeout(listo, 20000 * intento));
@@ -81,7 +84,9 @@ async function playasDe(pais) {
       lat: Number(lat),
       lon: Number(lon),
       enlaces: Number(fila.enlaces?.value ?? 0),
-      archivo: fila.foto ? decodeURIComponent(fila.foto.value.split('/Special:FilePath/')[1]) : null,
+      archivo: fila.foto
+        ? decodeURIComponent(fila.foto.value.split('/Special:FilePath/')[1])
+        : null,
       municipio: fila.municipioLabel?.value ?? '',
     });
   }
@@ -132,15 +137,17 @@ async function creditos(archivos) {
       titles: lote.map((archivo) => `File:${archivo}`).join('|'),
     });
     const datos = await json(`https://commons.wikimedia.org/w/api.php?${parametros}`);
-    const normalizados = new Map(
-      (datos.query.normalized ?? []).map((par) => [par.to, par.from]),
-    );
+    const normalizados = new Map((datos.query.normalized ?? []).map((par) => [par.to, par.from]));
     for (const pagina of Object.values(datos.query.pages ?? {})) {
       const info = pagina.imageinfo?.[0];
       if (!info || !/^image\/(jpeg|png)$/.test(info.mime)) continue;
       const meta = info.extmetadata ?? {};
       const limpio = (html) =>
-        (html ?? '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+        (html ?? '')
+          .replace(/<[^>]+>/g, '')
+          .replace(/&amp;/g, '&')
+          .replace(/\s+/g, ' ')
+          .trim();
       const titulo = (normalizados.get(pagina.title) ?? pagina.title).replace(/^File:/, '');
       resultado.set(titulo.replace(/_/g, ' '), {
         url: info.thumburl,

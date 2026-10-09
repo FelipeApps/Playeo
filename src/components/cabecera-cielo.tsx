@@ -31,8 +31,20 @@ export function CabeceraCielo({ titulo, subtitulo, conVolver = false, children }
 
   return (
     <View style={estilos.contenedor}>
-      <LinearGradient colors={cielo.colores} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
-      <Ola ancho={ancho} alto={34} amplitud={5} ciclos={2} color={colores.fondo} segundos={0} quieta />
+      <LinearGradient
+        colors={cielo.colores}
+        locations={[0, 0.6, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <Ola
+        ancho={ancho}
+        alto={34}
+        amplitud={5}
+        ciclos={2}
+        color={colores.fondo}
+        segundos={0}
+        quieta
+      />
 
       <View style={[estilos.contenido, { paddingTop: insets.top + espacio.s }]}>
         {conVolver ? (

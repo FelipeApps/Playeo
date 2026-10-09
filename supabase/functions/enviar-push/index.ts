@@ -17,7 +17,7 @@ function redactar(tipo: string, actor: string, datos: Record<string, string | nu
   const destino = datos.titulo ?? '';
   switch (tipo) {
     case 'solicitud_amistad':
-      return { title: 'Nueva solicitud de amistad', body: `${actor} quiere ser tu amigo en Playeo.` };
+      return { title: 'Nueva solicitud de amistad', body: `${actor} quiere ser tu amigo en Planeo.` };
     case 'amistad_aceptada':
       return { title: 'Solicitud aceptada', body: `${actor} y tú ya sois amigos.` };
     case 'invitacion_grupo':

@@ -38,7 +38,8 @@ export function TarjetaRanking({ entrada, puesto, ancho, retardo }: Props) {
   const olaOrilla = olaEfectiva(actual.olaAltura, resguardada);
   const frase = resumen(actual, resguardada, condiciones.esDeDia);
   const viento = `${estadoViento(actual.viento)}, ${Math.round(actual.viento)} km/h`;
-  const mar = olaOrilla == null ? estadoMar(null) : `${estadoMar(olaOrilla)}, ${decimal(olaOrilla)} m`;
+  const mar =
+    olaOrilla == null ? estadoMar(null) : `${estadoMar(olaOrilla)}, ${decimal(olaOrilla)} m`;
 
   return (
     <Presionable
@@ -52,7 +53,12 @@ export function TarjetaRanking({ entrada, puesto, ancho, retardo }: Props) {
       ]}>
       <View style={estilos.cuerpo}>
         <View>
-          <FotoPlaya playa={playa} tamano="miniatura" proporcion={ANCHO_FOTO / 112} style={estilos.foto} />
+          <FotoPlaya
+            playa={playa}
+            tamano="miniatura"
+            proporcion={ANCHO_FOTO / 112}
+            style={estilos.foto}
+          />
           <View style={[estilos.puesto, { backgroundColor: colores.superficie }]}>
             <Text style={[estilos.cifraPuesto, { color: colores.texto }]} allowFontScaling={false}>
               {puesto}

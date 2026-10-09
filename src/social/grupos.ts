@@ -7,7 +7,8 @@ import { useSesion } from '@/sesion/contexto';
 export type RolGrupo = Database['public']['Enums']['rol_grupo'];
 
 /** Mismo formato que valida la base de datos: solo enlaces de invitación de WhatsApp. */
-export const ENLACE_WHATSAPP = /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9_-]{10,64}(\?[A-Za-z0-9_=&%-]*)?$/;
+export const ENLACE_WHATSAPP =
+  /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9_-]{10,64}(\?[A-Za-z0-9_=&%-]*)?$/;
 
 /** Mis grupos, con el número de miembros y mi rol en cada uno. */
 export function useMisGrupos() {

@@ -47,7 +47,12 @@ function Formulario({ id, grupo }: { id: string; grupo: Datos }) {
 
   return (
     <>
-      <CampoTexto etiqueta="Nombre del grupo" value={nombre} onChangeText={setNombre} maxLength={50} />
+      <CampoTexto
+        etiqueta="Nombre del grupo"
+        value={nombre}
+        onChangeText={setNombre}
+        maxLength={50}
+      />
       <CampoTexto
         etiqueta="Descripción (opcional)"
         ayuda={`${descripcion.length} de ${DESCRIPCION_MAXIMA} caracteres.`}

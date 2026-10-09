@@ -3,7 +3,7 @@ import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 
 import { buscarZona, type Zona } from '@/data/zonas';
 
-const CLAVE = 'playeo/zona';
+const CLAVE = 'planeo/zona';
 
 interface Valor {
   /** Zona elegida, o `undefined` si aún no se ha elegido ninguna. */

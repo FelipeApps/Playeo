@@ -36,7 +36,12 @@ function Ilustracion({ escena }: { escena: Escena }) {
       ) : null}
       {escena === 'extravio' ? (
         <>
-          <Path d="M84 30v34" stroke={colores.textoSecundario} strokeWidth={1.75} strokeLinecap="round" />
+          <Path
+            d="M84 30v34"
+            stroke={colores.textoSecundario}
+            strokeWidth={1.75}
+            strokeLinecap="round"
+          />
           <Path d="M84 30l16 6-16 6z" fill={colores.malo} />
           <Path d="M72 78l4-14h16l4 14z" fill={colores.sol} />
         </>

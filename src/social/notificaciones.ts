@@ -18,12 +18,18 @@ export interface Notificacion {
   actor_id: string | null;
   actor_nombre: string | null;
   actor_foto: string | null;
-  datos: { grupo_id?: string; evento_id?: string; conversacion_id?: string; titulo?: string | null; extracto?: string };
+  datos: {
+    grupo_id?: string;
+    evento_id?: string;
+    conversacion_id?: string;
+    titulo?: string | null;
+    extracto?: string;
+  };
   leida: string | null;
   creada: string;
 }
 
-const CLAVE_TOKEN = 'playeo/token-push';
+const CLAVE_TOKEN = 'planeo/token-push';
 
 /** Frase de la notificación, tal como se lee en el centro de notificaciones. */
 export function textoDe(notificacion: Notificacion): string {
@@ -39,7 +45,9 @@ export function textoDe(notificacion: Notificacion): string {
     case 'invitacion_evento':
       return `${quien} te invita a la quedada ${destino ?? ''}.`.replace(' .', '.');
     case 'mensaje_nuevo':
-      return destino ? `Mensajes nuevos de ${quien} en ${destino}.` : `Mensajes nuevos de ${quien}.`;
+      return destino
+        ? `Mensajes nuevos de ${quien} en ${destino}.`
+        : `Mensajes nuevos de ${quien}.`;
   }
 }
 
@@ -168,7 +176,7 @@ export async function registrarDispositivo(pedirPermiso: boolean): Promise<Estad
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
-      name: 'Avisos de Playeo',
+      name: 'Avisos de Planeo',
       importance: Notifications.AndroidImportance.DEFAULT,
     });
   }

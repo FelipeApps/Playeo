@@ -58,7 +58,9 @@ export function useEscucharChats() {
     const canal = supabase
       .channel(`chats:${id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensajes' }, () => {
-        consultas.invalidateQueries({ queryKey: ['social', 'conversaciones'] });
+        consultas.invalidateQueries({
+          queryKey: ['social', 'conversaciones'],
+        });
       })
       .subscribe();
     return () => {
@@ -95,7 +97,9 @@ export function useParticipantes(conversacion: string) {
   return useQuery({
     queryKey: ['social', 'chat', conversacion, 'participantes'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('participantes_conversacion', { conversacion });
+      const { data, error } = await supabase.rpc('participantes_conversacion', {
+        conversacion,
+      });
       if (error) throw error;
       return data;
     },
@@ -138,6 +142,27 @@ export function useChatEnVivo(conversacion: string) {
           if (nuevo.autor_id !== yo) setEscribiendo(null);
         },
       )
+      // Al borrar, Realtime solo envía el id (la fila ya no existe y no se puede filtrar
+      // por conversación): se quita de esta lista si estaba en ella.
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'mensajes' },
+        ({ old }) => {
+          const borrado = (old as { id?: number }).id;
+          if (borrado == null) return;
+          consultas.setQueryData<Paginas>(claveMensajes(conversacion), (actual) =>
+            actual
+              ? {
+                  ...actual,
+                  pages: actual.pages.map((pagina) => pagina.filter((m) => m.id !== borrado)),
+                }
+              : actual,
+          );
+          consultas.invalidateQueries({
+            queryKey: ['social', 'conversaciones'],
+          });
+        },
+      )
       .on(
         'postgres_changes',
         {
@@ -147,7 +172,9 @@ export function useChatEnVivo(conversacion: string) {
           filter: `conversacion_id=eq.${conversacion}`,
         },
         () => {
-          consultas.invalidateQueries({ queryKey: ['social', 'chat', conversacion, 'participantes'] });
+          consultas.invalidateQueries({
+            queryKey: ['social', 'chat', conversacion, 'participantes'],
+          });
         },
       )
       .subscribe();
@@ -231,7 +258,10 @@ export function useAccionesChat(conversacion: string) {
     onSuccess: (id) => {
       consultas.setQueryData<Paginas>(claveMensajes(conversacion), (actual) =>
         actual
-          ? { ...actual, pages: actual.pages.map((pagina) => pagina.filter((m) => m.id !== id)) }
+          ? {
+              ...actual,
+              pages: actual.pages.map((pagina) => pagina.filter((m) => m.id !== id)),
+            }
           : actual,
       );
       consultas.invalidateQueries({ queryKey: ['social', 'conversaciones'] });
@@ -240,7 +270,9 @@ export function useAccionesChat(conversacion: string) {
 
   const marcarLeida = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('marcar_conversacion_leida', { conversacion });
+      const { error } = await supabase.rpc('marcar_conversacion_leida', {
+        conversacion,
+      });
       if (error) throw error;
     },
     onSuccess: () => consultas.invalidateQueries({ queryKey: ['social', 'conversaciones'] }),
@@ -251,7 +283,9 @@ export function useAccionesChat(conversacion: string) {
 
 /** Abre (o crea) la conversación directa con un amigo y devuelve su id. */
 export async function abrirConversacionDirecta(otro: string): Promise<string> {
-  const { data, error } = await supabase.rpc('abrir_conversacion_directa', { otro });
+  const { data, error } = await supabase.rpc('abrir_conversacion_directa', {
+    otro,
+  });
   if (error) throw error;
   return data;
 }
@@ -267,7 +301,10 @@ export async function conversacionDeGrupo(grupo: string): Promise<string> {
   return data.id;
 }
 
-const formatoDia = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
+const formatoDia = new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric',
+  month: 'short',
+});
 
 /** "10:32" si es de hoy; "9 oct" si es anterior. */
 export function momentoCorto(iso: string): string {

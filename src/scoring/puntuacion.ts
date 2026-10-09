@@ -253,8 +253,99 @@ export function mejorFranja(puntuaciones: { hora: number; total: number }[]): Fr
     if (tramo[HORAS_DE_FRANJA - 1].hora - tramo[0].hora !== HORAS_DE_FRANJA - 1) continue;
     const media = tramo.reduce((suma, { total }) => suma + total, 0) / HORAS_DE_FRANJA;
     if (!mejor || media > mejor.media) {
-      mejor = { desde: tramo[0].hora, hasta: tramo[0].hora + HORAS_DE_FRANJA, media: Math.round(media) };
+      mejor = {
+        desde: tramo[0].hora,
+        hasta: tramo[0].hora + HORAS_DE_FRANJA,
+        media: Math.round(media),
+      };
     }
   }
   return mejor;
+}
+
+// ---------------------------------------------------------------------------
+// Senderismo
+// ---------------------------------------------------------------------------
+
+/** Lo que la puntuación de monte necesita saber del tiempo. */
+export interface DatosMonte {
+  viento: number;
+  rachas: number;
+  /** Sensación térmica, °C. */
+  sensacion: number;
+  /** Lluvia en la hora, mm. */
+  lluvia: number;
+  /** Probabilidad de lluvia, %. */
+  probLluvia: number;
+  /** % de nubes bajas. */
+  nubesBajas: number;
+  /** Visibilidad en metros. */
+  visibilidad: number | null;
+  uv: number;
+  polvo: number | null;
+  aod: number | null;
+}
+
+export type FactorMonte = 'lluvia' | 'viento' | 'temperatura' | 'visibilidad' | 'uv' | 'calima';
+
+export interface PuntuacionMonte {
+  total: number;
+  factores: Record<FactorMonte, number>;
+}
+
+/** Pesos para senderismo. Suman 1. La lluvia manda: con el suelo mojado no se disfruta. */
+export const PESOS_MONTE: Record<FactorMonte, number> = {
+  lluvia: 0.3,
+  viento: 0.2,
+  temperatura: 0.2,
+  visibilidad: 0.1,
+  uv: 0.1,
+  calima: 0.1,
+};
+
+/** En el monte se tolera algo más de viento que tumbado en la arena. */
+const VIENTO_COMODO_MONTE: Record<ToleranciaViento, number> = { baja: 15, media: 25, alta: 35 };
+
+/**
+ * Puntuación de 0 a 100 de un día de senderismo. Misma idea que la de playa: una nota de
+ * 0 a 1 por factor y una media ponderada.
+ *  - Lluvia: lo peor de lo que cae (0 a 3 mm/h) y de lo probable que es que caiga.
+ *  - Viento: como en la playa, con las rachas pesando más porque en una cresta se notan.
+ *  - Temperatura: sensación ideal entre 12 y 22 °C; baja hacia 0 °C y hacia 34 °C.
+ *  - Visibilidad: las nubes bajas (el mar de nubes por dentro) y la niebla tapan el camino.
+ */
+export function puntuarSenderismo(
+  tiempo: DatosMonte,
+  preferencias: Pick<Preferencias, 'toleranciaViento' | 'sensibleCalima'>,
+): PuntuacionMonte {
+  const calima = intensidadCalima(tiempo.polvo, tiempo.aod);
+  const comodo = VIENTO_COMODO_MONTE[preferencias.toleranciaViento];
+  const vientoEfectivo = tiempo.viento * 0.6 + tiempo.rachas * 0.4;
+  const porNubes = 1 - 0.8 * rampa(tiempo.nubesBajas, 40, 100);
+  const conNiebla = tiempo.visibilidad != null && tiempo.visibilidad < 1000;
+
+  const factores: Record<FactorMonte, number> = {
+    lluvia: 1 - Math.max(rampa(tiempo.lluvia, 0, 3), 0.8 * rampa(tiempo.probLluvia, 30, 90)),
+    viento: notaDecreciente(vientoEfectivo, comodo * 0.25, comodo, comodo + 30),
+    temperatura:
+      tiempo.sensacion < 12 ? rampa(tiempo.sensacion, 0, 12) : 1 - rampa(tiempo.sensacion, 22, 34),
+    visibilidad: conNiebla ? porNubes * 0.5 : porNubes,
+    uv: 1 - 0.7 * rampa(tiempo.uv, 6, 11),
+    calima: 1 - calima,
+  };
+
+  const pesos = { ...PESOS_MONTE };
+  if (preferencias.sensibleCalima) pesos.calima *= 2;
+  const sumaPesos = Object.values(pesos).reduce((suma, peso) => suma + peso, 0);
+
+  let nota = 0;
+  for (const factor of Object.keys(factores) as FactorMonte[]) {
+    nota += (factores[factor] * pesos[factor]) / sumaPesos;
+  }
+
+  let total = Math.round(limitar(nota) * 100);
+  if (preferencias.sensibleCalima && nivelCalima(calima) === 'fuerte') {
+    total = Math.min(total, TOPE_CALIMA_SENSIBLE);
+  }
+  return { total, factores };
 }

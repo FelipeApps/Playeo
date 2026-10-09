@@ -3,9 +3,11 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { FotoPlaya } from '@/components/foto-playa';
+import { Icono } from '@/components/icono';
 import { CIELO_ALTO } from '@/components/ilustracion-playa';
 import { Presionable } from '@/components/presionable';
 import { Texto } from '@/components/texto';
+import { buscarActividad } from '@/data/actividades';
 import { buscarPlaya } from '@/data/playas';
 import { cuando, etiquetaRespuesta, type Respuesta } from '@/social/eventos';
 import { espacio, radio, sombra, useTema } from '@/theme';
@@ -14,8 +16,12 @@ export interface EventoResumido {
   id: string;
   titulo: string;
   empieza: string;
-  playa_id: string;
-  playa_nombre: string;
+  actividad_id: string;
+  actividad_nombre: string;
+  /** Nulo cuando el sitio se escribió a mano. */
+  lugar_id: string | null;
+  /** Nombre del lugar del catálogo o del sitio escrito a mano. */
+  lugar_nombre: string;
   grupo_nombre: string | null;
   creador_nombre: string;
   plazas_maximas: number | null;
@@ -24,10 +30,10 @@ export interface EventoResumido {
   me_han_invitado: boolean;
 }
 
-/** Una quedada en la lista: foto de la playa, cuándo, dónde y mi situación. */
+/** Una quedada en la lista: foto del lugar (si es una playa), cuándo, dónde y mi situación. */
 export function TarjetaEvento({ evento }: { evento: EventoResumido }) {
   const { colores, esOscuro } = useTema();
-  const playa = buscarPlaya(evento.playa_id);
+  const playa = evento.lugar_id ? buscarPlaya(evento.lugar_id) : undefined;
 
   const asistencia =
     evento.plazas_maximas == null
@@ -43,7 +49,7 @@ export function TarjetaEvento({ evento }: { evento: EventoResumido }) {
 
   return (
     <Presionable
-      accessibilityLabel={`${evento.titulo}. ${cuando(evento.empieza)}, en ${evento.playa_nombre}. ${asistencia}. ${situacion ?? ''}`}
+      accessibilityLabel={`${evento.actividad_nombre}: ${evento.titulo}. ${cuando(evento.empieza)}, en ${evento.lugar_nombre}. ${asistencia}. ${situacion ?? ''}`}
       accessibilityHint="Abre la quedada"
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -57,17 +63,19 @@ export function TarjetaEvento({ evento }: { evento: EventoResumido }) {
       {playa ? (
         <FotoPlaya playa={playa} tamano="miniatura" proporcion={0.8} style={estilos.foto} />
       ) : (
-        <View style={[estilos.foto, { backgroundColor: CIELO_ALTO }]} />
+        <View style={[estilos.foto, estilos.sinFoto, { backgroundColor: CIELO_ALTO }]}>
+          <Icono nombre={buscarActividad(evento.actividad_id).icono} tamano={40} color="#FFFFFF" />
+        </View>
       )}
       <View style={estilos.textos}>
         <Texto variante="etiqueta" color="primario">
-          {cuando(evento.empieza, true)}
+          {evento.actividad_nombre}, {cuando(evento.empieza, true)}
         </Texto>
         <Texto variante="subtitulo" numberOfLines={2}>
           {evento.titulo}
         </Texto>
         <Texto variante="detalle" color="textoSecundario" numberOfLines={1}>
-          {evento.playa_nombre}
+          {evento.lugar_nombre}
           {evento.grupo_nombre ? `, con ${evento.grupo_nombre}` : `, de ${evento.creador_nombre}`}
         </Texto>
         <View style={estilos.pie}>
@@ -100,6 +108,7 @@ const estilos = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   foto: { width: 88, minHeight: 110, borderRadius: radio.m, overflow: 'hidden' },
+  sinFoto: { alignItems: 'center', justifyContent: 'center' },
   textos: { flex: 1, gap: 2, justifyContent: 'center' },
   pie: {
     flexDirection: 'row',

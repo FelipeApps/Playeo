@@ -81,6 +81,9 @@ export function mensajeDeError(error: unknown): string {
   if (/invitaciones_evento_pkey/.test(texto)) {
     return 'Esa persona ya tiene una invitación a esta quedada.';
   }
+  if (/confirmar la mayoría de edad|Solo con la mayoría de edad/.test(texto)) {
+    return 'Antes tienes que confirmar que eres mayor de edad.';
+  }
   if (/necesita al menos un administrador/.test(texto)) {
     return 'El grupo necesita al menos un administrador. Nombra a otra persona antes.';
   }

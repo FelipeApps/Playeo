@@ -16,7 +16,7 @@ insert into public.amistades (solicitante_id, destinatario_id, estado) values
 insert into public.bloqueos (bloqueador_id, bloqueado_id)
 values (tests.id_de('ana'), tests.id_de('dani'));
 
-insert into public.playas (id, nombre, region) values ('playa-de-prueba', 'Playa de prueba', 'zona-de-prueba');
+insert into public.lugares (id, nombre, region) values ('playa-de-prueba', 'Playa de prueba', 'zona-de-prueba');
 
 create temp table contexto (clave text primary key, id uuid);
 grant all on contexto to authenticated;
@@ -31,7 +31,7 @@ insert into public.miembros_grupo (grupo_id, usuario_id, rol) values
 select tests.entrar_como('ana');
 select lives_ok(
   $$ with nuevo as (
-       insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad, plazas_maximas, enlace_whatsapp)
+       insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad, plazas_maximas, enlace_whatsapp)
        values (tests.id_de('ana'), 'playa-de-prueba', 'Baño al atardecer', now() + interval '2 days',
                'amigos', 2, 'https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv')
        returning id
@@ -40,14 +40,14 @@ select lives_ok(
   'Ana crea un evento para sus amigos'
 );
 with nuevo as (
-  insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad, grupo_id)
+  insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad, grupo_id)
   values (tests.id_de('ana'), 'playa-de-prueba', 'Surf del grupo', now() + interval '3 days', 'grupo',
           (select id from contexto where clave = 'grupo'))
   returning id
 )
 insert into contexto select 'de_grupo', id from nuevo;
 with nuevo as (
-  insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad)
+  insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad)
   values (tests.id_de('ana'), 'playa-de-prueba', 'Limpieza de playa', now() + interval '4 days', 'publico')
   returning id
 )
@@ -60,21 +60,21 @@ select is(
   'Quien crea el evento queda apuntada'
 );
 select throws_ok(
-  $$ insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad)
+  $$ insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad)
      values (tests.id_de('beto'), 'playa-de-prueba', 'Falso', now() + interval '1 day', 'publico') $$,
   '42501',
   null,
   'No se puede crear un evento en nombre de otra persona'
 );
 select throws_ok(
-  $$ insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad)
+  $$ insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad)
      values (tests.id_de('ana'), 'playa-de-prueba', 'Ayer', now() - interval '1 day', 'publico') $$,
   '42501',
   null,
   'No se pueden crear eventos en el pasado'
 );
 select throws_ok(
-  $$ insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad)
+  $$ insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad)
      values (tests.id_de('ana'), 'playa-inventada', 'Sin playa', now() + interval '1 day', 'publico') $$,
   '23503',
   null,
@@ -83,7 +83,7 @@ select throws_ok(
 
 select tests.entrar_como('beto');
 select throws_ok(
-  $$ insert into public.eventos (creador_id, playa_id, titulo, empieza, visibilidad, grupo_id)
+  $$ insert into public.eventos (creador_id, lugar_id, titulo, empieza, visibilidad, grupo_id)
      values (tests.id_de('beto'), 'playa-de-prueba', 'Me cuelo', now() + interval '1 day', 'grupo',
              (select id from contexto where clave = 'grupo')) $$,
   '42501',

@@ -1,4 +1,4 @@
-// Genera la migración que carga el catálogo de playas en la base de datos, a partir de
+// Genera la migración que carga las playas en el catálogo de lugares de la base de datos, a partir de
 // los dos JSON de la app. Si el catálogo cambia, se vuelve a ejecutar con un nombre de
 // migración nuevo:
 //
@@ -16,7 +16,7 @@ const filas = playas
 const contenido = `-- Catálogo de playas, generado por scripts/generar-sql-playas.mjs desde los JSON de la app.
 -- ${playas.length} playas. No editar a mano: regenerar.
 
-insert into public.playas (id, nombre, region) values
+insert into public.lugares (id, nombre, region) values
 ${filas}
 on conflict (id) do update set nombre = excluded.nombre, region = excluded.region;
 `;

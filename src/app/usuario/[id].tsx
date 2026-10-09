@@ -135,7 +135,11 @@ export default function PantallaUsuario() {
               }
             }}
           />
-          <Boton titulo="Eliminar de mis amigos" variante="secundario" onPress={confirmarEliminar} />
+          <Boton
+            titulo="Eliminar de mis amigos"
+            variante="secundario"
+            onPress={confirmarEliminar}
+          />
         </>
       );
       break;
@@ -150,7 +154,13 @@ export default function PantallaUsuario() {
       );
       break;
     default:
-      accion = <Boton titulo="Editar mi perfil" variante="secundario" onPress={() => router.push('/cuenta/editar')} />;
+      accion = (
+        <Boton
+          titulo="Editar mi perfil"
+          variante="secundario"
+          onPress={() => router.push('/cuenta/editar')}
+        />
+      );
   }
 
   const esOtraPersona = usuario.relacion !== 'yo';

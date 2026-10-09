@@ -2,12 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, use, useEffect, useRef, useState, type ReactNode } from 'react';
 
-import {
-  supabase,
-  supabaseConfigurado,
-  type CambiosPerfil,
-  type Perfil,
-} from '@/lib/supabase';
+import { supabase, supabaseConfigurado, type CambiosPerfil, type Perfil } from '@/lib/supabase';
 import { usePreferencias } from '@/preferencias/contexto';
 import { useRegion } from '@/region/contexto';
 import { PREFERENCIAS_POR_DEFECTO, type Preferencias } from '@/scoring/puntuacion';
