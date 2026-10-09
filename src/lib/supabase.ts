@@ -54,8 +54,14 @@ export function mensajeDeError(error: unknown): string {
       ? String((error as { code: unknown }).code)
       : '';
 
+  // En desarrollo, el error original va a la consola: el mensaje traducido no basta para depurar.
+  if (__DEV__) console.warn('[supabase]', codigo || 'sin código', texto || error);
+
+  if (/error sending .*email/i.test(texto)) {
+    return 'No se ha podido enviar el correo con el código. Inténtalo de nuevo en unos minutos.';
+  }
   if (/network request failed|failed to fetch/i.test(texto)) {
-    return 'No hay conexión con el servidor. Comprueba que Supabase está arrancado y que el móvil está en la misma wifi.';
+    return 'No hay conexión con el servidor. Comprueba tu conexión a internet.';
   }
   if (codigo === 'invalid_credentials' || /invalid login credentials/i.test(texto)) {
     return 'El correo o la contraseña no coinciden.';
