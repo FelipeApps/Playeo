@@ -1,0 +1,191 @@
+:root {
+  --fondo: #f1f6f6;
+  --superficie: #ffffff;
+  --texto: #0a2a3f;
+  --secundario: #496170;
+  --borde: #d3dfe2;
+  --primario: #0b5c8a;
+  --arena: #f1e6cf;
+  --sobre-arena: #4a3a14;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #07141d;
+    --superficie: #0f2230;
+    --texto: #eaf3f6;
+    --secundario: #9db4c0;
+    --borde: #213848;
+    --primario: #5bb8e8;
+    --arena: #2b2618;
+    --sobre-arena: #ead9ae;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+header {
+  background: linear-gradient(#0b5c8a, #1fa3a6);
+  color: #ffffff;
+  padding: 28px 16px 36px;
+}
+
+header a {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 20px;
+  text-decoration: none;
+}
+
+header h1 {
+  max-width: 720px;
+  margin: 20px auto 0;
+  font-size: 34px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+
+header p {
+  max-width: 720px;
+  margin: 8px auto 0;
+  opacity: 0.9;
+}
+
+header .marca {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+h2 {
+  margin: 36px 0 8px;
+  font-size: 23px;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+}
+
+h3 {
+  margin: 24px 0 4px;
+  font-size: 18px;
+}
+
+p,
+ul,
+ol {
+  margin: 0 0 14px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+a {
+  color: var(--primario);
+}
+
+a:focus-visible {
+  outline: 3px solid var(--primario);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16px;
+  font-size: 15px;
+}
+
+.tabla {
+  overflow-x: auto;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+th {
+  color: var(--secundario);
+  font-weight: 600;
+}
+
+.resumen,
+.aviso {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin: 0 0 20px;
+}
+
+.aviso {
+  background: var(--arena);
+  color: var(--sobre-arena);
+  border-color: transparent;
+}
+
+.resumen > :last-child,
+.aviso > :last-child {
+  margin-bottom: 0;
+}
+
+.fecha {
+  color: var(--secundario);
+  font-size: 15px;
+}
+
+.enlaces {
+  list-style: none;
+  padding: 0;
+}
+
+.enlaces a {
+  display: block;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.enlaces span {
+  display: block;
+  color: var(--secundario);
+  font-weight: 400;
+  font-size: 15px;
+}
+
+footer {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+  color: var(--secundario);
+  font-size: 15px;
+}
+
+footer a {
+  margin-right: 14px;
+}

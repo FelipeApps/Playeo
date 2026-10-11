@@ -27,6 +27,27 @@ function redactar(tipo: string, actor: string, datos: Record<string, string | nu
       return { title: 'Te han invitado a un grupo', body: `${actor} te invita a ${destino}.` };
     case 'invitacion_evento':
       return { title: 'Te han invitado a una quedada', body: `${actor} te invita a ${destino}.` };
+    case 'asistencia_evento':
+      return { title: destino || 'Tu quedada', body: `${actor} se ha apuntado.` };
+    case 'evento_cambiado': {
+      const que =
+        datos.cambio === 'fecha'
+          ? 'la hora'
+          : datos.cambio === 'lugar'
+            ? 'el lugar'
+            : 'la hora y el lugar';
+      return { title: destino || 'Cambios en una quedada', body: `${actor} ha cambiado ${que}.` };
+    }
+    case 'evento_cancelado':
+      return {
+        title: 'Quedada cancelada',
+        body: `${datos.organizador ?? 'Quien organizaba'} ha cancelado ${destino || 'la quedada'}.`,
+      };
+    case 'recordatorio_evento':
+      // La hora exacta depende del huso de cada móvil: la push no la dice, la app sí.
+      return { title: destino || 'Tu quedada', body: 'Empieza en menos de dos horas.' };
+    case 'miembro_grupo':
+      return { title: destino || 'Tu grupo', body: `${actor} se ha unido al grupo.` };
     default:
       return {
         title: destino ? `${actor} en ${destino}` : actor,

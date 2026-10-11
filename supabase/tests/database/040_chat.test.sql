@@ -165,9 +165,9 @@ select throws_ok(
   'La bloqueada no puede escribir a quien la bloqueó'
 );
 select is(
-  (select count(*) from public.mis_conversaciones()),
-  0::bigint,
-  'La conversación desaparece de la lista de la bloqueada'
+  (select string_agg(puedo_escribir::text, ',') from public.mis_conversaciones()),
+  'false',
+  'La bloqueada conserva la conversación en su lista, marcada como de solo lectura'
 );
 select throws_ok(
   $$ select public.abrir_conversacion_directa(tests.id_de('carla')) $$,

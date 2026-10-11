@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
+import { almacenSesion } from '@/lib/almacen-sesion';
 import type { Database } from '@/lib/database.types';
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -21,9 +21,8 @@ export const supabase = createClient<Database>(
   claveAnonima ?? 'sin-configurar',
   {
     auth: {
-      // Prototipo: la sesión va en AsyncStorage. Para producción conviene cifrarla
-      // con una clave guardada en SecureStore.
-      storage: AsyncStorage,
+      // La sesión se guarda cifrada; la clave vive en el almacén seguro del sistema.
+      storage: almacenSesion,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
@@ -57,6 +56,12 @@ export function mensajeDeError(error: unknown): string {
   // En desarrollo, el error original va a la consola: el mensaje traducido no basta para depurar.
   if (__DEV__) console.warn('[supabase]', codigo || 'sin código', texto || error);
 
+  if (codigo === 'PT429' || /Demasiadas acciones seguidas/.test(texto)) {
+    return 'Vas demasiado rápido. Espera un momento y vuelve a intentarlo.';
+  }
+  if (/aceptar los Términos de uso/.test(texto)) {
+    return 'Antes tienes que leer y aceptar los Términos de uso.';
+  }
   if (/error sending .*email/i.test(texto)) {
     return 'No se ha podido enviar el correo con el código. Inténtalo de nuevo en unos minutos.';
   }

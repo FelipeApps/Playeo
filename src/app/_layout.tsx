@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { VERSION_CONDICIONES } from '@/data/textos-legales';
 import { ProveedorPreferencias } from '@/preferencias/contexto';
 import { ProveedorRegion } from '@/region/contexto';
 import { ProveedorSesion, useMiPerfil, useSesion } from '@/sesion/contexto';
@@ -57,10 +58,16 @@ function EscuchaSocial() {
   // se le pide antes de que use nada social.
   const { data: perfil } = useMiPerfil();
   const ruta = usePathname();
-  const faltaEdad = perfil != null && perfil.mayoria_edad_confirmada == null;
+  // Tampoco ha aceptado las condiciones, o las aceptó en una versión anterior.
+  const pendiente =
+    perfil != null &&
+    (perfil.mayoria_edad_confirmada == null || // Un servidor aún sin esta columna no la devuelve: ahí no se puede pedir.
+      ('condiciones_version' in perfil && perfil.condiciones_version !== VERSION_CONDICIONES));
   useEffect(() => {
-    if (faltaEdad && ruta !== '/cuenta/edad') router.replace('/cuenta/edad');
-  }, [faltaEdad, ruta]);
+    if (pendiente && ruta !== '/cuenta/edad' && ruta !== '/cuenta/condiciones') {
+      router.replace('/cuenta/edad');
+    }
+  }, [pendiente, ruta]);
 
   useEffect(() => {
     // Sin diálogo: solo registra si el usuario ya dio permiso en su momento.
@@ -151,6 +158,7 @@ export default function LayoutRaiz() {
                   <Stack.Screen name="notificaciones" />
                   <Stack.Screen name="cuenta/recuperar" />
                   <Stack.Screen name="cuenta/edad" />
+                  <Stack.Screen name="cuenta/condiciones" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="evento/[id]/editar" />
                   <Stack.Screen name="moderacion" />
                   <Stack.Screen name="emergencia" options={{ presentation: 'modal' }} />

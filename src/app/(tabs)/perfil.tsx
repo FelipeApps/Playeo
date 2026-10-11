@@ -11,6 +11,7 @@ import { CabeceraCielo } from '@/components/cabecera-cielo';
 import { Esqueleto } from '@/components/esqueleto';
 import { ALTO_PESTANAS, useBarraEstado } from '@/components/pantalla';
 import { Seccion } from '@/components/seccion';
+import type { DocumentoLegal } from '@/data/textos-legales';
 import { useContactoConfianza } from '@/seguridad/contacto';
 import { SeccionPreferencias } from '@/components/seccion-preferencias';
 import { Segmentado } from '@/components/segmentado';
@@ -174,6 +175,24 @@ function SeccionSeguridad() {
         variante="secundario"
         onPress={() => router.push('/contacto-confianza')}
       />
+    </Seccion>
+  );
+}
+
+/** Textos legales y créditos de los datos. Visibles con o sin sesión. */
+function SeccionLegal() {
+  const abrir = (doc: DocumentoLegal) =>
+    router.push({ pathname: '/cuenta/condiciones', params: { doc } });
+
+  return (
+    <Seccion titulo="Legal">
+      <Boton
+        titulo="Términos y normas"
+        variante="secundario"
+        onPress={() => abrir('condiciones')}
+      />
+      <Boton titulo="Privacidad" variante="secundario" onPress={() => abrir('privacidad')} />
+      <Boton titulo="Aviso legal y créditos" variante="secundario" onPress={() => abrir('aviso')} />
     </Seccion>
   );
 }
@@ -410,6 +429,7 @@ export default function PantallaPerfil() {
             <SeccionPreferencias />
           </>
         )}
+        {lista ? <SeccionLegal /> : null}
       </View>
     </ScrollView>
   );

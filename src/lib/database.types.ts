@@ -143,14 +143,14 @@ isOneToOne: true
                   ]
                 },"eventos": {
                   Row: {
-                    "actividad_id": string,"actividad_otra": string | null,"actualizado": string,"creado": string,"creador_id": string,"descripcion": string | null,"empieza": string,"enlace_whatsapp": string | null,"grupo_id": string | null,"id": string,"lugar_id": string | null,"plazas_maximas": number | null,"region": string | null,"titulo": string,"ubicacion_direccion": string | null,"ubicacion_nombre": string | null,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
+                    "actividad_id": string,"actividad_otra": string | null,"actualizado": string,"creado": string,"creador_id": string,"descripcion": string | null,"empieza": string,"enlace_whatsapp": string | null,"grupo_id": string | null,"id": string,"lugar_id": string | null,"plazas_maximas": number | null,"recordado": string | null,"region": string | null,"titulo": string,"ubicacion_direccion": string | null,"ubicacion_nombre": string | null,"visibilidad": Database["public"]['Enums']["visibilidad_evento"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "actividad_id"?: string,"actividad_otra"?: string | null,"actualizado"?: string,"creado"?: string,"creador_id": string,"descripcion"?: string | null,"empieza": string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"lugar_id"?: string | null,"plazas_maximas"?: number | null,"region"?: string | null,"titulo": string,"ubicacion_direccion"?: string | null,"ubicacion_nombre"?: string | null,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
+                    "actividad_id"?: string,"actividad_otra"?: string | null,"actualizado"?: string,"creado"?: string,"creador_id": string,"descripcion"?: string | null,"empieza": string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"lugar_id"?: string | null,"plazas_maximas"?: number | null,"recordado"?: string | null,"region"?: string | null,"titulo": string,"ubicacion_direccion"?: string | null,"ubicacion_nombre"?: string | null,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
                   }
                   Update: {
-                    "actividad_id"?: string,"actividad_otra"?: string | null,"actualizado"?: string,"creado"?: string,"creador_id"?: string,"descripcion"?: string | null,"empieza"?: string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"lugar_id"?: string | null,"plazas_maximas"?: number | null,"region"?: string | null,"titulo"?: string,"ubicacion_direccion"?: string | null,"ubicacion_nombre"?: string | null,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
+                    "actividad_id"?: string,"actividad_otra"?: string | null,"actualizado"?: string,"creado"?: string,"creador_id"?: string,"descripcion"?: string | null,"empieza"?: string,"enlace_whatsapp"?: string | null,"grupo_id"?: string | null,"id"?: string,"lugar_id"?: string | null,"plazas_maximas"?: number | null,"recordado"?: string | null,"region"?: string | null,"titulo"?: string,"ubicacion_direccion"?: string | null,"ubicacion_nombre"?: string | null,"visibilidad"?: Database["public"]['Enums']["visibilidad_evento"]
                   }
                   Relationships: [
                     {
@@ -389,14 +389,14 @@ isOneToOne: false
                   ]
                 },"perfiles": {
                   Row: {
-                    "actualizado": string,"bio": string | null,"creado": string,"id": string,"mayoria_edad_confirmada": string | null,"nombre_usuario": string,"nombre_visible": string,"preferencias_playa": NonNullable<Json>,"privacidad": Database["public"]['Enums']["privacidad_perfil"],"ruta_foto": string | null,"zona": string | null
+                    "actualizado": string,"bio": string | null,"condiciones_aceptadas": string | null,"condiciones_version": string | null,"creado": string,"id": string,"mayoria_edad_confirmada": string | null,"nombre_usuario": string,"nombre_visible": string,"preferencias_playa": NonNullable<Json>,"privacidad": Database["public"]['Enums']["privacidad_perfil"],"ruta_foto": string | null,"zona": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "actualizado"?: string,"bio"?: string | null,"creado"?: string,"id": string,"mayoria_edad_confirmada"?: string | null,"nombre_usuario": string,"nombre_visible": string,"preferencias_playa"?: NonNullable<Json>,"privacidad"?: Database["public"]['Enums']["privacidad_perfil"],"ruta_foto"?: string | null,"zona"?: string | null
+                    "actualizado"?: string,"bio"?: string | null,"condiciones_aceptadas"?: string | null,"condiciones_version"?: string | null,"creado"?: string,"id": string,"mayoria_edad_confirmada"?: string | null,"nombre_usuario": string,"nombre_visible": string,"preferencias_playa"?: NonNullable<Json>,"privacidad"?: Database["public"]['Enums']["privacidad_perfil"],"ruta_foto"?: string | null,"zona"?: string | null
                   }
                   Update: {
-                    "actualizado"?: string,"bio"?: string | null,"creado"?: string,"id"?: string,"mayoria_edad_confirmada"?: string | null,"nombre_usuario"?: string,"nombre_visible"?: string,"preferencias_playa"?: NonNullable<Json>,"privacidad"?: Database["public"]['Enums']["privacidad_perfil"],"ruta_foto"?: string | null,"zona"?: string | null
+                    "actualizado"?: string,"bio"?: string | null,"condiciones_aceptadas"?: string | null,"condiciones_version"?: string | null,"creado"?: string,"id"?: string,"mayoria_edad_confirmada"?: string | null,"nombre_usuario"?: string,"nombre_visible"?: string,"preferencias_playa"?: NonNullable<Json>,"privacidad"?: Database["public"]['Enums']["privacidad_perfil"],"ruta_foto"?: string | null,"zona"?: string | null
                   }
                   Relationships: [
                     
@@ -462,6 +462,9 @@ isOneToOne: false
             "abrir_conversacion_directa":
 { Args: { "otro": string }; Returns: string
                            },
+"aceptar_condiciones":
+{ Args: { "version": string }; Returns: undefined
+                           },
 "aceptar_invitacion_grupo":
 { Args: { "grupo": string }; Returns: undefined
                            },
@@ -519,7 +522,7 @@ isOneToOne: false
                            },
 "mis_conversaciones":
 { Args: Record<PropertyKey, never>; Returns: {
-              "evento_id": string,"grupo_id": string,"id": string,"no_leidos": number,"otro_id": string,"ruta_foto": string,"tipo": Database["public"]['Enums']["tipo_conversacion"],"titulo": string,"ultimo_cuerpo": string,"ultimo_mensaje": string,"ultimo_mio": boolean
+              "evento_id": string,"grupo_id": string,"id": string,"no_leidos": number,"otro_id": string,"puedo_escribir": boolean,"ruta_foto": string,"tipo": Database["public"]['Enums']["tipo_conversacion"],"titulo": string,"ultimo_cuerpo": string,"ultimo_mensaje": string,"ultimo_mio": boolean
             }[]
                            },
 "mis_grupos":
@@ -571,7 +574,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "estado_amistad": "pendiente"|"aceptada","estado_reporte": "abierto"|"revisado"|"cerrado","motivo_reporte": "spam"|"acoso"|"contenido_inapropiado"|"suplantacion"|"otro","privacidad_perfil": "publico"|"amigos","relacion_usuario": "yo"|"ninguna"|"amigo"|"solicitud_enviada"|"solicitud_recibida"|"bloqueado","respuesta_evento": "voy"|"quiza"|"no_voy","rol_grupo": "admin"|"miembro","tipo_conversacion": "directa"|"grupo"|"evento","tipo_lugar": "playa"|"ruta"|"cancha","tipo_notificacion": "solicitud_amistad"|"amistad_aceptada"|"invitacion_grupo"|"invitacion_evento"|"mensaje_nuevo","tipo_sitio": "catalogo_con_estado"|"catalogo"|"manual","visibilidad_evento": "amigos"|"grupo"|"publico"
+            "estado_amistad": "pendiente"|"aceptada","estado_reporte": "abierto"|"revisado"|"cerrado","motivo_reporte": "spam"|"acoso"|"contenido_inapropiado"|"suplantacion"|"otro","privacidad_perfil": "publico"|"amigos","relacion_usuario": "yo"|"ninguna"|"amigo"|"solicitud_enviada"|"solicitud_recibida"|"bloqueado","respuesta_evento": "voy"|"quiza"|"no_voy","rol_grupo": "admin"|"miembro","tipo_conversacion": "directa"|"grupo"|"evento","tipo_lugar": "playa"|"ruta"|"cancha","tipo_notificacion": "solicitud_amistad"|"amistad_aceptada"|"invitacion_grupo"|"invitacion_evento"|"mensaje_nuevo"|"asistencia_evento"|"evento_cambiado"|"evento_cancelado"|"recordatorio_evento"|"miembro_grupo","tipo_sitio": "catalogo_con_estado"|"catalogo"|"manual","visibilidad_evento": "amigos"|"grupo"|"publico"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -691,7 +694,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "estado_amistad": ["pendiente", "aceptada"],"estado_reporte": ["abierto", "revisado", "cerrado"],"motivo_reporte": ["spam", "acoso", "contenido_inapropiado", "suplantacion", "otro"],"privacidad_perfil": ["publico", "amigos"],"relacion_usuario": ["yo", "ninguna", "amigo", "solicitud_enviada", "solicitud_recibida", "bloqueado"],"respuesta_evento": ["voy", "quiza", "no_voy"],"rol_grupo": ["admin", "miembro"],"tipo_conversacion": ["directa", "grupo", "evento"],"tipo_lugar": ["playa", "ruta", "cancha"],"tipo_notificacion": ["solicitud_amistad", "amistad_aceptada", "invitacion_grupo", "invitacion_evento", "mensaje_nuevo"],"tipo_sitio": ["catalogo_con_estado", "catalogo", "manual"],"visibilidad_evento": ["amigos", "grupo", "publico"]
+            "estado_amistad": ["pendiente", "aceptada"],"estado_reporte": ["abierto", "revisado", "cerrado"],"motivo_reporte": ["spam", "acoso", "contenido_inapropiado", "suplantacion", "otro"],"privacidad_perfil": ["publico", "amigos"],"relacion_usuario": ["yo", "ninguna", "amigo", "solicitud_enviada", "solicitud_recibida", "bloqueado"],"respuesta_evento": ["voy", "quiza", "no_voy"],"rol_grupo": ["admin", "miembro"],"tipo_conversacion": ["directa", "grupo", "evento"],"tipo_lugar": ["playa", "ruta", "cancha"],"tipo_notificacion": ["solicitud_amistad", "amistad_aceptada", "invitacion_grupo", "invitacion_evento", "mensaje_nuevo", "asistencia_evento", "evento_cambiado", "evento_cancelado", "recordatorio_evento", "miembro_grupo"],"tipo_sitio": ["catalogo_con_estado", "catalogo", "manual"],"visibilidad_evento": ["amigos", "grupo", "publico"]
           }
         }
 } as const

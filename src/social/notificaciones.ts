@@ -24,12 +24,26 @@ export interface Notificacion {
     conversacion_id?: string;
     titulo?: string | null;
     extracto?: string;
+    /** En los cambios de una quedada: qué ha cambiado. */
+    cambio?: 'fecha' | 'lugar' | 'ambos';
+    /** En recordatorios y cancelaciones: cuándo empieza (o empezaba). */
+    empieza?: string;
+    /** En las cancelaciones: quién organizaba, porque el aviso ya no tiene autor. */
+    organizador?: string | null;
   };
   leida: string | null;
   creada: string;
 }
 
 const CLAVE_TOKEN = 'planeo/token-push';
+
+const QUE_CAMBIA = { fecha: 'la hora', lugar: 'el lugar', ambos: 'la hora y el lugar' } as const;
+
+/** "18:30" en la hora del móvil. */
+function horaDe(iso: string): string {
+  const fecha = new Date(iso);
+  return `${fecha.getHours()}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+}
 
 /** Frase de la notificación, tal como se lee en el centro de notificaciones. */
 export function textoDe(notificacion: Notificacion): string {
@@ -48,6 +62,18 @@ export function textoDe(notificacion: Notificacion): string {
       return destino
         ? `Mensajes nuevos de ${quien} en ${destino}.`
         : `Mensajes nuevos de ${quien}.`;
+    case 'asistencia_evento':
+      return `${quien} se ha apuntado a ${destino ?? 'tu quedada'}.`;
+    case 'evento_cambiado':
+      return `${quien} ha cambiado ${QUE_CAMBIA[notificacion.datos.cambio ?? 'ambos']} de ${destino ?? 'una quedada'}.`;
+    case 'evento_cancelado':
+      return `${notificacion.datos.organizador ?? 'Quien organizaba'} ha cancelado ${destino ?? 'una quedada'}.`;
+    case 'recordatorio_evento':
+      return notificacion.datos.empieza
+        ? `${destino ?? 'Tu quedada'} empieza a las ${horaDe(notificacion.datos.empieza)}.`
+        : `${destino ?? 'Tu quedada'} empieza pronto.`;
+    case 'miembro_grupo':
+      return `${quien} se ha unido a ${destino ?? 'tu grupo'}.`;
   }
 }
 
@@ -60,8 +86,13 @@ export function destinoDe(
   if (tipo === 'mensaje_nuevo' && datos.conversacion_id) {
     return { pathname: '/chat/[id]', params: { id: datos.conversacion_id } };
   }
-  if (tipo === 'invitacion_evento' && datos.evento_id) {
+  // Todo lo que habla de una quedada que sigue existiendo lleva a su ficha.
+  if (datos.evento_id) {
     return { pathname: '/evento/[id]', params: { id: datos.evento_id } };
+  }
+  if (tipo === 'evento_cancelado' || tipo === 'recordatorio_evento') return '/quedadas';
+  if (tipo === 'miembro_grupo' && datos.grupo_id) {
+    return { pathname: '/grupos/[id]', params: { id: datos.grupo_id } };
   }
   if (tipo === 'invitacion_grupo') return '/grupos';
   if (tipo === 'amistad_aceptada' && actor) {

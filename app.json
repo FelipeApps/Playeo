@@ -47,7 +47,8 @@
           "microphonePermission": "Planeo usa el micrófono solo mientras grabas una nota de voz para enviarla en un chat."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -79,6 +79,9 @@ export default function PantallaChat() {
   const chat = conversaciones.data?.find((candidato) => candidato.id === id);
   const titulo = chat?.titulo ?? tituloInicial ?? 'Chat';
   const esGrupal = chat ? chat.tipo !== 'directa' : (participantes.data?.length ?? 2) > 2;
+  // Falso cuando hay un bloqueo en una conversación directa. El servidor rechazaría el
+  // envío igualmente; aquí solo se evita ofrecer una caja que no va a funcionar.
+  const puedoEscribir = chat?.puedo_escribir ?? true;
   const lista = mensajes.data?.pages.flat() ?? [];
   const idMasNuevo = lista[0]?.id;
 
@@ -348,7 +351,15 @@ export default function PantallaChat() {
             borderTopColor: colores.borde,
           },
         ]}>
-        {grabando ? (
+        {!puedoEscribir ? (
+          <Texto
+            variante="detalle"
+            color="textoSecundario"
+            accessibilityRole="text"
+            style={estilos.soloLectura}>
+            No puedes enviar mensajes a esta conversación.
+          </Texto>
+        ) : grabando ? (
           <>
             <Presionable
               accessibilityLabel="Descartar la nota de voz"
@@ -519,6 +530,7 @@ const estilos = StyleSheet.create({
   piloto: { width: 10, height: 10, borderRadius: 5, backgroundColor: ROJO_EMERGENCIA },
   cronometro: { fontFamily: fuentes.textoFuerte, fontSize: 16, fontVariant: ['tabular-nums'] },
   flexible: { flex: 1 },
+  soloLectura: { flex: 1, textAlign: 'center', paddingVertical: espacio.s },
   enviar: {
     width: 48,
     height: 48,

@@ -24,7 +24,7 @@ begin
     'authenticated',
     nombre || '@prueba.test',
     '{"provider": "email"}'::jsonb,
-    jsonb_build_object('nombre_usuario', nombre, 'nombre_visible', initcap(nombre), 'mayor_de_edad', true)
+    jsonb_build_object('nombre_usuario', nombre, 'nombre_visible', initcap(nombre), 'mayor_de_edad', true, 'condiciones_version', '2026-10')
   );
   return nuevo;
 end;

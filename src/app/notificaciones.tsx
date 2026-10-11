@@ -30,7 +30,7 @@ export default function PantallaNotificaciones() {
       <EstadoVacio
         escena="vacio"
         titulo="Entra para ver tus avisos"
-        mensaje="Aquí verás las solicitudes de amistad, las invitaciones y los mensajes nuevos.">
+        mensaje="Aquí verás los mensajes nuevos, lo que pase en tus quedadas y las invitaciones.">
         <Boton titulo="Entrar" onPress={() => router.replace('/cuenta/entrar')} />
       </EstadoVacio>
     );
@@ -55,7 +55,7 @@ export default function PantallaNotificaciones() {
       <EstadoVacio
         escena="vacio"
         titulo="Todo tranquilo"
-        mensaje="Cuando alguien te escriba, te invite o te envíe una solicitud, lo verás aquí."
+        mensaje="Cuando alguien te escriba, se apunte a tu quedada o te invite, lo verás aquí."
       />
     );
   } else {
@@ -127,7 +127,7 @@ export default function PantallaNotificaciones() {
   }
 
   return (
-    <PantallaFormulario titulo="Avisos" subtitulo="Solicitudes, invitaciones y mensajes.">
+    <PantallaFormulario titulo="Avisos" subtitulo="Mensajes, quedadas, grupos y amistades.">
       {contenido}
     </PantallaFormulario>
   );
